@@ -1,0 +1,48 @@
+{
+  "name": "@hughescr/logger",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Logging module common to Craig's packages",
+  "license": "BSD-3-Clause",
+  "author": "Craig Hughes <craig.npm@rungie.com> (https://npmjs.org/~hughescr)",
+  "keywords": [
+    "logging"
+  ],
+  "main": "src/index.js",
+  "scripts": {
+    "test": "grunt test",
+    "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hughescr/shared-logger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hughescr/shared-logger/issues"
+  },
+  "homepage": "https://github.com/hughescr/shared-logger#readme",
+  "engines": {
+    "node": ">=5.x"
+  },
+  "devDependencies": {
+    "eslint": "^2.8.0",
+    "eslint-plugin-if-in-test": "^0.2.0",
+    "eslint-plugin-promise": "^1.1.0",
+    "eslint-plugin-should-promised": "^1.0.8",
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-eslint": "^18.1.0",
+    "grunt-mocha-istanbul": "^4.0.2",
+    "grunt-mocha-test": "^0.12.7",
+    "istanbul": "^0.4.3",
+    "load-grunt-tasks": "^3.5.0",
+    "mocha": "^2.4.5",
+    "should": "^8.3.1"
+  },
+  "dependencies": {
+    "moment": "^2.13.0",
+    "morgan": "^1.7.0",
+    "winston": "^2.2.0"
+  }
+}
