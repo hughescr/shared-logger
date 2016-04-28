@@ -14,7 +14,17 @@ function MOMENT_FORMAT_NOW()
     return moment().utc().format(MOMENT_FORMAT);
 }
 
-const logger = new winston.Logger({ level: 'debug' });
+const logger = new winston.Logger({
+    levels:
+    {
+        noprefix: 0,
+        info: 1,
+        warn: 2,
+        error: 3,
+        debug: 4,
+    },
+    level: 'debug',
+});
 
 logger.add(winston.transports.Console,
 {
@@ -23,7 +33,12 @@ logger.add(winston.transports.Console,
     level: 'debug',
     formatter: function(options)
     {
-        return `[${options.timestamp()}] [${options.level.toUpperCase()}] ${undefined !== options.message ? options.message : ''} ${options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : ''}`;
+        if(options.level == 'noprefix')
+        {
+            return options.message;
+        }
+
+        return `[${options.timestamp()}] [${options.level.toUpperCase()}]${options.message ? ' ' + options.message : ''}${options.meta && Object.keys(options.meta).length ? ' ' + JSON.stringify(options.meta) : ''}`;
     },
 });
 
@@ -66,7 +81,7 @@ let replacement_console = {};
         {
             args[args.length - 1].source = 'console';
         }
-        else
+        else if(!(args[args.length - 1] instanceof Object && args[args.length - 1].source))
         {
             args.push({ source: 'console' });
         }
@@ -109,5 +124,5 @@ logger.interceptConsole();
 
 global.logger = logger;
 
-logger.stream = { write: function(msg) { logger.info(msg); } };
+logger.stream = { write: function(msg) { logger.log('noprefix', msg); } };
 module.exports = morgan('mydev', { stream: logger.stream });

@@ -25,6 +25,7 @@
     "node": ">=5.x"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "eslint": "^2.8.0",
     "eslint-plugin-if-in-test": "^0.2.0",
     "eslint-plugin-promise": "^1.1.0",
@@ -38,7 +39,8 @@
     "istanbul": "^0.4.3",
     "load-grunt-tasks": "^3.5.0",
     "mocha": "^2.4.5",
-    "should": "^8.3.1"
+    "split": "^1.0.0",
+    "supertest": "^1.2.0"
   },
   "dependencies": {
     "moment": "^2.13.0",
