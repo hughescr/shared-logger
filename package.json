@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Logging module common to Craig's packages",
   "publishConfig": {
     "access": "public"
@@ -11,9 +11,6 @@
     "logging"
   ],
   "main": "src/index.js",
-  "files": [
-    "src"
-  ],
   "scripts": {
     "test": "grunt test",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
