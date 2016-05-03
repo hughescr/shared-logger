@@ -1,9 +1,9 @@
-logger.sublime-project
-
+logger.sublime-*
 .gitignore
-
+.eslintignore
+.eslintrc.js
+.npmignore
 Gruntfile.js
 
 test
-
 coverage
