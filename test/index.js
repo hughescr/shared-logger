@@ -1,36 +1,37 @@
 'use strict';
 
-const expressLogger = require('../src');
-const chai = require('chai');
-const expect = chai.expect;
+const loggers       = require('../src');
+const logger        = loggers.logger;
+const expressLogger = loggers.middleware;
+const chai          = require('chai');
+const expect        = chai.expect;
 
-const http = require('http');
-const request = require('supertest');
+const http          = require('http');
+const request       = require('supertest');
 
-logger.restoreConsole();
-
-describe('Logging', function()
+describe('Logging', () =>
 {
-    describe('Basic logger', function()
+    describe('Basic logger', () =>
     {
-        it('should provide a global "logger" object', function()
+        it('should provide a "logger" and "middleware"', () =>
         {
-            expect(global.logger).to.be.instanceof(Object);
+            expect(loggers.logger).to.be.instanceof(Object);
+            expect(loggers.middleware).to.be.instanceof(Object);
         });
 
-        describe('Methods', function()
+        describe('Methods', () =>
         {
-            ['info', 'warn', 'error', 'debug'].forEach(function(level)
+            ['info', 'warn', 'error', 'debug'].forEach(level =>
             {
-                it(`logger should have a method for logging at level ${level}`, function()
+                it(`logger should have a method for logging at level ${level}`, () =>
                 {
-                    expect(global.logger).to.have.property(level)
+                    expect(logger).to.have.property(level)
                         .which.is.an.instanceof(Function);
                 });
 
-                it(`logging at level ${level} should have proper format`, function()
+                it(`logging at level ${level} should have proper format`, () =>
                 {
-                    let hook = captureStream((level != 'error' && level != 'debug') ? process.stdout : process.stderr);
+                    const hook = captureStream((level != 'error' && level != 'debug') ? process.stdout : process.stderr);
                     logger[level]('hi');
                     hook.unhook();
 
@@ -39,27 +40,27 @@ describe('Logging', function()
             });
         });
 
-        it('logging should allow passing an object', function()
+        it('logging should allow passing an object', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.info('hi', { some: 'object' });
             hook.unhook();
 
             expect(hook.captured()).to.match(/\[INFO\] hi \{"some":"object"\}\n$/);
         });
 
-        it('logging should allow empty message', function()
+        it('logging should allow empty message', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.info();
             hook.unhook();
 
             expect(hook.captured()).to.match(/\[INFO\]\n$/);
         });
 
-        it('logging should message with just object', function()
+        it('logging should message with just object', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.info({ some: 'object' });
             hook.unhook();
 
@@ -67,21 +68,21 @@ describe('Logging', function()
         });
     });
 
-    describe('Console', function()
+    describe('Console', () =>
     {
-        it('logger should be able to interceptConsole', function()
+        it('logger should be able to interceptConsole', () =>
         {
-            expect(global.logger).to.have.property('interceptConsole')
+            expect(logger).to.have.property('interceptConsole')
                 .which.is.an.instanceof(Function);
         });
 
-        it('logger should be able to restoreConsole', function()
+        it('logger should be able to restoreConsole', () =>
         {
-            expect(global.logger).to.have.property('restoreConsole')
+            expect(logger).to.have.property('restoreConsole')
                 .which.is.an.instanceof(Function);
         });
 
-        it('intercepting and restoring console should work', function()
+        it('intercepting and restoring console should work', () =>
         {
             const orig_log = console.log;
             logger.interceptConsole();
@@ -92,7 +93,7 @@ describe('Logging', function()
             expect(console.log).to.equal(orig_log);
         });
 
-        it('intercepting and restoring console multiple times should work', function()
+        it('intercepting and restoring console multiple times should work', () =>
         {
             const orig_log = console.log;
             logger.interceptConsole();
@@ -110,13 +111,13 @@ describe('Logging', function()
             expect(console.log).to.equal(orig_log);
         });
 
-        describe('Methods', function()
+        describe('Methods', () =>
         {
-            ['log', 'info', 'warn'].forEach(function(level)
+            ['log', 'info', 'warn'].forEach(level =>
             {
-                it(`Check level ${level} on console`, function()
+                it(`Check level ${level} on console`, () =>
                 {
-                    let hook = captureStream(process.stdout);
+                    const hook = captureStream(process.stdout);
                     logger.interceptConsole();
                     console[level]('hi');
                     logger.restoreConsole();
@@ -126,9 +127,9 @@ describe('Logging', function()
                 });
             });
 
-            it('Check level error on console', function()
+            it('Check level error on console', () =>
             {
-                let hook = captureStream(process.stderr);
+                const hook = captureStream(process.stderr);
                 logger.interceptConsole();
                 console.error('hi');
                 logger.restoreConsole();
@@ -137,9 +138,9 @@ describe('Logging', function()
                 expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\[ERROR\\] hi \\{"source":"console","stacktrace":"Stacktrace[^)]*/test/index.js:[^}]*\\}\\n$'));
             });
 
-            it('Check dir helper on console', function()
+            it('Check dir helper on console', () =>
             {
-                let hook = captureStream(process.stdout);
+                const hook = captureStream(process.stdout);
                 logger.interceptConsole();
                 console.dir({ some: 'object' });
                 logger.restoreConsole();
@@ -149,9 +150,9 @@ describe('Logging', function()
             });
         });
 
-        it('console logging an empty message should work', function()
+        it('console logging an empty message should work', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.interceptConsole();
             console.log();
             logger.restoreConsole();
@@ -160,9 +161,9 @@ describe('Logging', function()
             expect(hook.captured()).to.match(/\[INFO\] \{"source":"console"\}\n$/);
         });
 
-        it('console logging overriding source should work', function()
+        it('console logging overriding source should work', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.interceptConsole();
             console.log('hi', { source: 'other' });
             logger.restoreConsole();
@@ -171,9 +172,9 @@ describe('Logging', function()
             expect(hook.captured()).to.match(/\[INFO\] hi \{"source":"other"\}\n$/);
         });
 
-        it('console logging an object should work', function()
+        it('console logging an object should work', () =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
             logger.interceptConsole();
             console.log('hi', { some: 'object' });
             logger.restoreConsole();
@@ -183,18 +184,18 @@ describe('Logging', function()
         });
     });
 
-    describe('Express', function()
+    describe('Express', () =>
     {
-        it('should provide a logging middleware for express', function()
+        it('should provide a logging middleware for express', () =>
         {
             expect(expressLogger).to.be.instanceof(Function);
         });
 
-        it('express middleware should log things', function(done)
+        it('express middleware should log things', done =>
         {
-            let hook = captureStream(process.stdout);
+            const hook = captureStream(process.stdout);
 
-            request(http.createServer(function(req, res)
+            request(http.createServer((req, res) =>
             {
                 return expressLogger(req, res, function onNext()
                 {
@@ -203,7 +204,7 @@ describe('Logging', function()
             }))
             .get('/some/path')
             .set('Referrer', 'http://example.com/some/referrer')
-            .expect(function()
+            .expect(() =>
             {
                 hook.unhook();
 
@@ -213,17 +214,17 @@ describe('Logging', function()
         });
 
         [
-            [ 200, 32 ],
-            [ 300, 36 ],
-            [ 400, 33 ],
-            [ 500, 31 ],
-        ].forEach(function(status_color)
+            [200, 32],
+            [300, 36],
+            [400, 33],
+            [500, 31],
+        ].forEach(status_color =>
         {
-            it(`express middleware should colorize status ${status_color[0]} properly`, function(done)
+            it(`express middleware should colorize status ${status_color[0]} properly`, done =>
             {
-                let hook = captureStream(process.stdout);
+                const hook = captureStream(process.stdout);
 
-                request(http.createServer(function(req, res)
+                request(http.createServer((req, res) =>
                 {
                     return expressLogger(req, res, function onNext()
                     {
@@ -233,7 +234,7 @@ describe('Logging', function()
                 }))
                 .get('/some/path')
                 .set('Referrer', 'http://example.com/some/referrer')
-                .expect(function()
+                .expect(() =>
                 {
                     hook.unhook();
 
@@ -247,7 +248,7 @@ describe('Logging', function()
 
 function captureStream(stream)
 {
-    let oldWrite = stream.write;
+    const oldWrite = stream.write;
     let buf = '';
     stream.write = function(chunk)
     {

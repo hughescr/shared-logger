@@ -1,14 +1,19 @@
 {
   "name": "@hughescr/logger",
   "version": "1.0.0",
-  "private": false,
   "description": "Logging module common to Craig's packages",
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "BSD-3-Clause",
   "author": "Craig Hughes <craig.npm@rungie.com> (https://npmjs.org/~hughescr)",
   "keywords": [
     "logging"
   ],
   "main": "src/index.js",
+  "files": [
+    "src/index.js"
+  ],
   "scripts": {
     "test": "grunt test",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
