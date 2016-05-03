@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(grunt)
 {
     require('load-grunt-tasks')(grunt);
@@ -33,7 +35,7 @@ module.exports = function(grunt)
             },
         });
 
-    grunt.registerTask('todo', function()
+    grunt.registerTask('todo', () =>
     {
         grunt.config.merge(
         {

@@ -1,7 +1,5 @@
 'use strict';
 
-if(global.logger) { return; } // Don't double-load
-
 const util               = require('util');
 const winston            = require('winston');
 const moment             = require('moment');
@@ -14,7 +12,17 @@ function MOMENT_FORMAT_NOW()
     return moment().utc().format(MOMENT_FORMAT);
 }
 
-const logger = new winston.Logger({ level: 'debug' });
+const logger = new winston.Logger({
+    levels:
+    {
+        noprefix: 0,
+        info: 1,
+        warn: 2,
+        error: 3,
+        debug: 4,
+    },
+    level: 'debug',
+});
 
 logger.add(winston.transports.Console,
 {
@@ -23,17 +31,22 @@ logger.add(winston.transports.Console,
     level: 'debug',
     formatter: function(options)
     {
-        return `[${options.timestamp()}] [${options.level.toUpperCase()}] ${undefined !== options.message ? options.message : ''} ${options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : ''}`;
+        if(options.level == 'noprefix')
+        {
+            return options.message;
+        }
+
+        return `[${options.timestamp()}] [${options.level.toUpperCase()}]${options.message ? ' ' + options.message : ''}${options.meta && Object.keys(options.meta).length ? ' ' + JSON.stringify(options.meta) : ''}`;
     },
 });
 
 morgan.token('timestamp', MOMENT_FORMAT_NOW);
-morgan.token('route',     function(req) { return req.route && req.route.path || '***'; });
-morgan.token('user',      function(req) { return req.user  && req.user._id   || '-'; });
+morgan.token('route',     req => req.route && req.route.path || '***');
+morgan.token('user',      req => req.user  && req.user._id   || '-');
 
 morgan.format('mydev', function myDevFormatLine(tokens, req, res)
 {
-    let status = res._header ? res.statusCode : undefined;
+    const status = res._header ? res.statusCode : undefined;
 
     // get status color
     let color = 32; // green
@@ -53,27 +66,27 @@ morgan.format('mydev', function myDevFormatLine(tokens, req, res)
     return fn(tokens, req, res);
 });
 
-let orig_console = {};
-['log', 'info', 'warn', 'error', 'dir'].forEach(function(f) { orig_console[f] = console[f]; });
+const orig_console = {};
+['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
 
-let replacement_console = {};
-['log', 'info', 'warn', 'error'].forEach(function(f)
+const replacement_console = {};
+['log', 'info', 'warn', 'error'].forEach(f =>
 {
     replacement_console[f] = function hideMe()
     {
-        let args = Array.prototype.slice.call(arguments);
+        const args = Array.prototype.slice.call(arguments);
         if(args.length > 0 && args[args.length - 1] instanceof Object && !args[args.length - 1].source) // Set source to "console" if not already set to something else
         {
             args[args.length - 1].source = 'console';
         }
-        else
+        else if(!(args[args.length - 1] instanceof Object && args[args.length - 1].source))
         {
             args.push({ source: 'console' });
         }
 
         if(f == 'error' && !args[args.length - 1].stacktrace) // If this is an error, attach a stacktrace
         {
-            let stackTrace = { name: 'Stacktrace' };
+            const stackTrace = { name: 'Stacktrace' };
             Error.captureStackTrace(stackTrace, hideMe);
             args[args.length - 1].stacktrace = stackTrace.stack;
         }
@@ -105,9 +118,6 @@ logger.interceptConsole = function()
     }
 };
 
-logger.interceptConsole();
-
-global.logger = logger;
-
-logger.stream = { write: function(msg) { logger.info(msg); } };
-module.exports = morgan('mydev', { stream: logger.stream });
+logger.stream = { write: function(msg) { logger.log('noprefix', msg); } };
+module.exports.middleware = morgan('mydev', { stream: logger.stream });
+module.exports.logger = logger;

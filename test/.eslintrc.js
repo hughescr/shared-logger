@@ -4,10 +4,6 @@ module.exports =
     {
         mocha: true,
     },
-    globals:
-    {
-        logger: true,
-    },
     plugins:
     [
         'if-in-test',
