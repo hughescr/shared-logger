@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Logging module common to Craig's packages",
   "publishConfig": {
     "access": "public"
@@ -27,6 +27,7 @@
     "node": ">=5.x"
   },
   "devDependencies": {
+    "@hughescr/eslint-config-default": "^1.0.0",
     "chai": "^3.5.0",
     "eslint": "^2.8.0",
     "eslint-plugin-if-in-test": "^0.2.0",
