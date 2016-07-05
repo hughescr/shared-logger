@@ -2,9 +2,9 @@
 
 module.exports =
 {
-    extends: '@hughescr/eslint-config-default',
+    'extends': '@hughescr/eslint-config-default',
     rules:
     {
         'no-console': 'off',
-    }
+    },
 };
