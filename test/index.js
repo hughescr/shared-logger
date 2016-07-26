@@ -213,6 +213,32 @@ describe('Logging', () =>
             .end(done);
         });
 
+        it('express middleware should handle request details', done =>
+        {
+            const hook = captureStream(process.stdout);
+
+            request(http.createServer((req, res) =>
+            {
+                return expressLogger(req, res, function onNext()
+                {
+                    req.user = { _id: 'fake_user_id' };
+                    req.route = { path: '/some/fake/route/path' };
+                    res.end('OK');
+                });
+            }))
+            .get('/some/path')
+            .set('Referrer', 'http://example.com/some/referrer')
+            .expect(() =>
+            {
+                hook.unhook();
+
+                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path /some/fake/route/path [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~fake_user_id~\\n\\n$'));
+            })
+            .end(done);
+        });
+
+        it('express middleware should handle case of logging where there is no res._header');
+
         [
             [200, 32],
             [300, 36],
