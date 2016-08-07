@@ -118,6 +118,6 @@ logger.interceptConsole = function()
     }
 };
 
-logger.stream = { write: function(msg) { logger.log('noprefix', msg); } };
+logger.stream = { write: function(msg) { logger.log('noprefix', msg.trim()); } };
 module.exports.middleware = morgan('mydev', { stream: logger.stream });
 module.exports.logger = logger;
