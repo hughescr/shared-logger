@@ -46,7 +46,7 @@ describe('Logging', () =>
             logger.info('hi', { some: 'object' });
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\] hi \{"some":"object"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO] hi \{"some":"object"\}\n$/);
         });
 
         it('logging should allow empty message', () =>
@@ -55,7 +55,7 @@ describe('Logging', () =>
             logger.info();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\]\n$/);
+            expect(hook.captured()).to.match(/\[INFO]\n$/);
         });
 
         it('logging should message with just object', () =>
@@ -64,7 +64,7 @@ describe('Logging', () =>
             logger.info({ some: 'object' });
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\] \{"some":"object"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO] \{"some":"object"\}\n$/);
         });
     });
 
@@ -158,7 +158,7 @@ describe('Logging', () =>
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\] \{"source":"console"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO] \{"source":"console"\}\n$/);
         });
 
         it('console logging overriding source should work', () =>
@@ -169,7 +169,7 @@ describe('Logging', () =>
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\] hi \{"source":"other"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO] hi \{"source":"other"\}\n$/);
         });
 
         it('console logging an object should work', () =>
@@ -180,7 +180,7 @@ describe('Logging', () =>
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO\] hi \{"some":"object","source":"console"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO] hi \{"some":"object","source":"console"\}\n$/);
         });
     });
 
@@ -208,7 +208,7 @@ describe('Logging', () =>
             {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path \\*\\*\\* [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n\\n$'));
+                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path \\*\\*\\* [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n$'));
             })
             .end(done);
         });
@@ -232,7 +232,7 @@ describe('Logging', () =>
             {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path /some/fake/route/path [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~fake_user_id~\\n\\n$'));
+                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path /some/fake/route/path [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~fake_user_id~\\n$'));
             })
             .end(done);
         });
@@ -264,7 +264,7 @@ describe('Logging', () =>
                 {
                     hook.unhook();
 
-                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path \\*\\*\\* [^ ]*${status_color[1]}m${status_color[0]} \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n\\n$`));
+                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path \\*\\*\\* [^ ]*${status_color[1]}m${status_color[0]} \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n$`));
                 })
                 .end(done);
             });
