@@ -27,7 +27,7 @@
     "node": ">=5.x"
   },
   "devDependencies": {
-    "@hughescr/eslint-config-default": "^2.3.1",
+    "@hughescr/eslint-config-default": "^2.4.1",
     "chai": "^4.2.0",
     "eslint": "^5.7.0",
     "eslint-plugin-if-in-test": "^0.2.0",

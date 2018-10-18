@@ -90,10 +90,10 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@hughescr/eslint-config-default@^2.3.1":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@hughescr/eslint-config-default/-/eslint-config-default-2.4.0.tgz#1b9eafb51c740f3c0ffedd4a4e265bc7a793b552"
-  integrity sha512-UOaMz1Pr+gl+RpVuNA9zydvsAkG7peMM6LheKlcgGfr17jBHmmZsKvMHRwTkT7AWIVfwtkg4k85QePBoLjevTg==
+"@hughescr/eslint-config-default@^2.4.1":
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/@hughescr/eslint-config-default/-/eslint-config-default-2.4.1.tgz#88063e1612d594d0275b75351d3397ef72fab13a"
+  integrity sha512-QGG9ZvvuxCyfJN/V0gZWvWJQn3hDhdMXcARDXKHHGciXWfGsw02WlBNIfrikkQ/mEHvO8/Y/51S6ONjOm4qyjw==
   dependencies:
     eslint-plugin-node "^7.0.1"
     eslint-plugin-promise "^4.0.1"
