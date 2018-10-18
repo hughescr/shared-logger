@@ -91,11 +91,12 @@
     to-fast-properties "^2.0.0"
 
 "@hughescr/eslint-config-default@^2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@hughescr/eslint-config-default/-/eslint-config-default-2.3.1.tgz#b1e8d765e15167175678b170727d1efdf196e483"
-  integrity sha512-b96ABSqGc4C72bcjYVtzPwyggiUQAougl/Eiz3F6ei12puxCbdS1rXc+zML9Lu4iqOX2hqAOUZosF6CTBz2iMQ==
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@hughescr/eslint-config-default/-/eslint-config-default-2.4.0.tgz#1b9eafb51c740f3c0ffedd4a4e265bc7a793b552"
+  integrity sha512-UOaMz1Pr+gl+RpVuNA9zydvsAkG7peMM6LheKlcgGfr17jBHmmZsKvMHRwTkT7AWIVfwtkg4k85QePBoLjevTg==
   dependencies:
-    eslint-plugin-promise "^3.8.0"
+    eslint-plugin-node "^7.0.1"
+    eslint-plugin-promise "^4.0.1"
 
 "@stryker-mutator/util@^0.0.1":
   version "0.0.1"
@@ -709,6 +710,14 @@ escodegen@1.8.x, escodegen@~1.8.0:
   optionalDependencies:
     source-map "~0.2.0"
 
+eslint-plugin-es@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-es/-/eslint-plugin-es-1.3.1.tgz#5acb2565db4434803d1d46a9b4cbc94b345bd028"
+  integrity sha512-9XcVyZiQRVeFjqHw8qHNDAZcQLqaHlOGGpeYqzYh8S4JYCWTCO3yzyen8yVmA5PratfzTRWDwCOFphtDEG+w/w==
+  dependencies:
+    eslint-utils "^1.3.0"
+    regexpp "^2.0.0"
+
 eslint-plugin-if-in-test@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/eslint-plugin-if-in-test/-/eslint-plugin-if-in-test-0.2.0.tgz#4c2a3dff94313803f00eac89f153996658de47b9"
@@ -718,10 +727,17 @@ eslint-plugin-if-in-test@^0.2.0:
     requireindex "^1.1.0"
     wildcard "^1.1.2"
 
-eslint-plugin-promise@^3.8.0:
-  version "3.8.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-promise/-/eslint-plugin-promise-3.8.0.tgz#65ebf27a845e3c1e9d6f6a5622ddd3801694b621"
-  integrity sha512-JiFL9UFR15NKpHyGii1ZcvmtIqa3UTwiDAGb8atSffe43qJ3+1czVGN6UtkklpcJ2DVnqvTMzEKRaJdBkAL2aQ==
+eslint-plugin-node@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-node/-/eslint-plugin-node-7.0.1.tgz#a6e054e50199b2edd85518b89b4e7b323c9f36db"
+  integrity sha512-lfVw3TEqThwq0j2Ba/Ckn2ABdwmL5dkOgAux1rvOk6CO7A6yGyPI2+zIxN6FyNkp1X1X/BSvKOceD6mBWSj4Yw==
+  dependencies:
+    eslint-plugin-es "^1.3.1"
+    eslint-utils "^1.3.1"
+    ignore "^4.0.2"
+    minimatch "^3.0.4"
+    resolve "^1.8.1"
+    semver "^5.5.0"
 
 eslint-plugin-promise@^4.0.1:
   version "4.0.1"
@@ -741,7 +757,7 @@ eslint-scope@^4.0.0:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint-utils@^1.3.1:
+eslint-utils@^1.3.0, eslint-utils@^1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/eslint-utils/-/eslint-utils-1.3.1.tgz#9a851ba89ee7c460346f97cf8939c7298827e512"
   integrity sha512-Z7YjnIldX+2XMcjr7ZkgEsOj/bREONV60qYeB/bjMAqqqZ4zxKyWX+BOUkdmRmA9riiIPVvo5x86m5elviOk0Q==
@@ -1391,7 +1407,7 @@ iconv-lite@^0.4.17, iconv-lite@^0.4.24, iconv-lite@~0.4.13:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
-ignore@^4.0.6:
+ignore@^4.0.2, ignore@^4.0.6:
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-4.0.6.tgz#750e3db5862087b4737ebac8207ffd1ef27b25fc"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
@@ -2421,7 +2437,7 @@ regex-not@^1.0.0, regex-not@^1.0.2:
     extend-shallow "^3.0.2"
     safe-regex "^1.1.0"
 
-regexpp@^2.0.1:
+regexpp@^2.0.0, regexpp@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-2.0.1.tgz#8d19d31cf632482b589049f8281f93dbcba4d07f"
   integrity sha512-lv0M6+TkDVniA3aD1Eg0DVpfU/booSu7Eev3TDO/mZKHBfVjgCGTV4t4buppESEYDtkArYFOxTJWv6S5C+iaNw==
@@ -2491,7 +2507,7 @@ resolve@1.1.x, resolve@~1.1.0:
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.1.7.tgz#203114d82ad2c5ed9e8e0411b3932875e889e97b"
   integrity sha1-IDEU2CrSxe2ejgQRs5ModeiJ6Xs=
 
-resolve@^1.1.6, resolve@^1.1.7, resolve@^1.4.0:
+resolve@^1.1.6, resolve@^1.1.7, resolve@^1.4.0, resolve@^1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.8.1.tgz#82f1ec19a423ac1fbd080b0bab06ba36e84a7a26"
   integrity sha512-AicPrAC7Qu1JxPCZ9ZgCZlY35QgFnNqc+0LtbRNxnVw4TXvjQ72wnuL9JQcEBgXkI9JM8MsT9kaQoHcpCRJOYA==
