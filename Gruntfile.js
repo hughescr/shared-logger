@@ -1,29 +1,23 @@
 'use strict';
 
-module.exports = function(grunt)
-{
+module.exports = function(grunt) {
     require('load-grunt-tasks')(grunt);
     grunt.loadNpmTasks('grunt-mocha-test');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-contrib-clean');
 
-    grunt.initConfig(
-        {
+    grunt.initConfig({
             clean: ['coverage/'],
 
-            eslint:
-            {
+            eslint: {
                 options: { maxWarnings: 0 },
                 lint: ['.'],
             },
 
-            mocha_istanbul:
-            {
-                coverage:
-                {
+            mocha_istanbul: {
+                coverage: {
                     src: 'test',
-                    options:
-                    {
+                    options: {
                         reportFormats: ['html'],
                         coverageFolder: 'coverage',
                         mask: '**/*.js',
@@ -35,16 +29,11 @@ module.exports = function(grunt)
             },
         });
 
-    grunt.registerTask('todo', () =>
-    {
-        grunt.config.merge(
-        {
-            eslint:
-            {
-                options:
-                {
-                    rules:
-                    {
+    grunt.registerTask('todo', () => {
+        grunt.config.merge({
+            eslint: {
+                options: {
+                    rules: {
                         'no-warning-comments': [1, { terms: ['todo', 'fixme', 'xxx'], location: 'anywhere' }],
                     },
                 },
