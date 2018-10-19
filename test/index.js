@@ -9,11 +9,21 @@ const expect        = chai.expect;
 const http          = require('http');
 const request       = require('supertest');
 
+const morgan        = require('morgan');
+
 describe('Logging', () => {
     describe('Basic logger', () => {
         it('should provide a "logger" and "middleware"', () => {
             expect(loggers.logger).to.be.instanceof(Object);
             expect(loggers.middleware).to.be.instanceof(Object);
+            expect(loggers.logger.level).to.be.equal('debug');
+        });
+
+        it('morgan should have some things defined', () => {
+            expect(morgan).to.have.property('timestamp').which.is.instanceof(Function);
+            expect(morgan).to.have.property('route').which.is.instanceof(Function);
+            expect(morgan).to.have.property('user').which.is.instanceof(Function);
+            expect(morgan).to.have.property('mydev').which.is.instanceof(Function);
         });
 
         describe('Methods', () => {
@@ -70,43 +80,56 @@ describe('Logging', () => {
         });
 
         it('intercepting and restoring console should work', () => {
-            const orig_log = console.log;
+            const orig_console = {};
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
             logger.interceptConsole();
-            expect(console.__intercepted__).to.equal(true);
-            expect(console.log).to.not.equal(orig_log);
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.not.equal(orig_console[f]); });
             logger.restoreConsole();
-            expect(console.__intercepted__).to.equal(undefined);
-            expect(console.log).to.equal(orig_log);
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
         });
 
         it('intercepting and restoring console multiple times should work', () => {
-            const orig_log = console.log;
+            const orig_console = {};
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
             logger.interceptConsole();
-            expect(console.__intercepted__).to.equal(true);
-            expect(console.log).to.not.equal(orig_log);
             logger.interceptConsole();
-            expect(console.__intercepted__).to.equal(true);
-            expect(console.log).to.not.equal(orig_log);
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.not.equal(orig_console[f]); });
 
             logger.restoreConsole();
-            expect(console.__intercepted__).to.equal(undefined);
-            expect(console.log).to.equal(orig_log);
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
             logger.restoreConsole();
-            expect(console.__intercepted__).to.equal(undefined);
-            expect(console.log).to.equal(orig_log);
+            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
         });
 
         describe('Methods', () => {
             ['log', 'info', 'warn'].forEach(level => {
+                it(`Check level ${level} on console with no arg`, () => {
+                    const hook = captureStream(process.stdout);
+                    logger.interceptConsole();
+                    console[level]();
+                    logger.restoreConsole();
+                    hook.unhook();
+                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\[${level.replace('log', 'info').toLocaleUpperCase()}\\] \\{"source":"console"\\}\\n$`));
+                });
+
                 it(`Check level ${level} on console`, () => {
                     const hook = captureStream(process.stdout);
                     logger.interceptConsole();
                     console[level]('hi');
                     logger.restoreConsole();
                     hook.unhook();
-
                     expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\[${level.replace('log', 'info').toLocaleUpperCase()}\\] hi \\{"source":"console"\\}\\n$`));
                 });
+            });
+
+            it('Check level error on console with no arg', () => {
+                const hook = captureStream(process.stderr);
+                logger.interceptConsole();
+                console.error();
+                logger.restoreConsole();
+                hook.unhook();
+
+                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\[ERROR\\] \\{"source":"console","stacktrace":"Stacktrace[^)]*/test/index.js:[^}]*\\}\\n$'));
             });
 
             it('Check level error on console', () => {
@@ -182,6 +205,35 @@ describe('Logging', () => {
                 expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\+0000\\] \\S*GET /some/path \\*\\*\\* [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n$'));
             })
             .end(done);
+        });
+
+        it('express middleware should create color formatter which is re-used', done => {
+            const hook = captureStream(process.stdout);
+            let origFormatter;
+
+            request(http.createServer((req, res) => {
+                return expressLogger(req, res, function onNext() {
+                    res.end('OK');
+                });
+            }))
+            .get('/some/path')
+            .expect(() => {
+                expect(morgan).to.have.property('mydev').which.has.property('colorFormatter32').which.is.instanceof(Function);
+                origFormatter = morgan.mydev.colorFormatter32;
+            })
+            .end(() => {
+                request(http.createServer((req, res) => {
+                    return expressLogger(req, res, function onNext() {
+                        res.end('OK');
+                    });
+                }))
+                .get('/some/path')
+                .expect(() => {
+                    hook.unhook();
+                    expect(morgan).to.have.property('mydev').which.has.property('colorFormatter32').which.equals(origFormatter);
+                })
+                .end(done);
+            });
         });
 
         it('express middleware should handle request details', done => {
