@@ -3,6 +3,8 @@ logger.sublime-*
 .eslintignore
 .eslintrc.js
 Gruntfile.js
+README.md
+.travis.yml
 
 test
 coverage
