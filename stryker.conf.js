@@ -9,6 +9,5 @@ module.exports = function(config) {
     transpilers: [],
     testFramework: 'mocha',
     coverageAnalysis: 'perTest',
-    mutate: ['src/**/*.js'],
   });
 };

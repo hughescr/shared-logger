@@ -47,7 +47,7 @@ morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
 
     // get status color
     let color;
-    switch (true) {
+    switch(true) {
         case (status >= 500): color = 31; break;  // red
         case (status >= 400): color = 33; break;  // yellow
         case (status >= 300): color = 36; break;  // cyan

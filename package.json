@@ -12,7 +12,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "grunt test",
+    "test": "nyc --reporter=html --reporter=text --reporter=clover mocha test",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
   },
   "repository": {
@@ -27,33 +27,24 @@
     "node": ">=5.x"
   },
   "devDependencies": {
-    "@hughescr/eslint-config-default": "^2.4.1",
+    "@hughescr/eslint-config-default": "^2.4.2",
+    "@stryker-mutator/core": "^1.1.0",
+    "@stryker-mutator/html-reporter": "^1.1.0",
+    "@stryker-mutator/javascript-mutator": "^1.1.0",
+    "@stryker-mutator/mocha-framework": "^1.1.0",
+    "@stryker-mutator/mocha-runner": "^1.1.0",
     "chai": "^4.2.0",
-    "eslint": "^5.7.0",
+    "eslint": "^5.15.1",
     "eslint-plugin-if-in-test": "^0.2.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-should-promised": "^2.0.0",
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-clean": "^2.0.0",
-    "grunt-eslint": "^21.0.0",
-    "grunt-mocha-istanbul": "^5.0.2",
-    "grunt-mocha-test": "^0.13.2",
-    "istanbul": "^0.4.5",
-    "load-grunt-tasks": "^4.0.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.0.2",
+    "nyc": "^13.3.0",
     "split": "^1.0.0",
-    "stryker": "^0.30.0",
-    "stryker-api": "^0.21.4",
-    "stryker-cli": "^0.2.0",
-    "stryker-html-reporter": "^0.16.5",
-    "stryker-javascript-mutator": "^0.11.2",
-    "stryker-mocha-framework": "^0.12.5",
-    "stryker-mocha-runner": "^0.14.5",
-    "supertest": "^3.3.0"
+    "supertest": "^4.0.0"
   },
   "dependencies": {
-    "moment": "^2.17.0",
+    "moment": "^2.24.0",
     "morgan": "^1.7.0",
     "winston": "^2.3.0"
   }

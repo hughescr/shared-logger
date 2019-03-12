@@ -38,3 +38,4 @@ reports/
 
 # Sublime workspace
 *.sublime-workspace
+.nyc_output/
