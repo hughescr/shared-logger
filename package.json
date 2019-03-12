@@ -12,7 +12,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text --reporter=clover mocha test",
+    "test": "nyc --reporter=html --reporter=text --reporter=lcov mocha test",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
   },
   "repository": {
