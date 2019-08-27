@@ -27,14 +27,14 @@
     "node": ">=5.x"
   },
   "devDependencies": {
-    "@hughescr/eslint-config-default": "^2.4.4",
+    "@hughescr/eslint-config-default": "^2.4.6",
     "@stryker-mutator/core": "^2.0.2",
     "@stryker-mutator/html-reporter": "^2.0.2",
     "@stryker-mutator/javascript-mutator": "^2.0.2",
     "@stryker-mutator/mocha-framework": "^2.0.2",
     "@stryker-mutator/mocha-runner": "^2.0.2",
     "chai": "^4.2.0",
-    "eslint": "^6.1.0",
+    "eslint": "^6.2.2",
     "eslint-plugin-if-in-test": "^0.2.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-should-promised": "^2.0.0",
@@ -46,6 +46,6 @@
   "dependencies": {
     "moment": "^2.24.0",
     "morgan": "^1.7.0",
-    "winston": "^2.3.0"
+    "winston": "^3.2.1"
   }
 }
