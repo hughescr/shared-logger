@@ -8,15 +8,14 @@ const winston            = require('winston');
 const moment             = require('moment');
 const morgan             = require('morgan');
 
-const MOMENT_FORMAT      = 'YYYY-MM-DD HH:mm:ss.SSS ZZ';
+const MOMENT_FORMAT      = 'YYYY-MM-DDTHH:mm:ss.SSSZZ';
 
 function MOMENT_FORMAT_NOW() {
     return moment().utc().format(MOMENT_FORMAT);
 }
 
-const logger = new winston.Logger({
-    levels:
-    {
+const logger = winston.createLogger({
+    levels: {
         noprefix: 0,
         info: 1,
         warn: 2,
@@ -24,18 +23,25 @@ const logger = new winston.Logger({
         debug: 4,
     },
     level: 'debug',
-});
+    transports: [
+        new winston.transports.Console({
+            stderrLevels: ['error', 'debug'],
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.splat(),
+                winston.format.printf(({ timestamp, level, message, ...meta }) => {
+                    if(message instanceof Object) {
+                        message = JSON.stringify(message);
+                    }
+                    if(level == 'noprefix') {
+                        return message;
+                    }
 
-logger.add(winston.transports.Console,
-{
-    timestamp: MOMENT_FORMAT_NOW,
-    formatter: function(options) {
-        if(options.level == 'noprefix') {
-            return options.message;
-        }
-
-        return `[${options.timestamp()}] [${options.level.toUpperCase()}]${options.message ? ' ' + options.message : ''}${options.meta && Object.keys(options.meta).length ? ' ' + JSON.stringify(options.meta) : ''}`;
-    },
+                    return `[${timestamp}] [${level.toUpperCase()}]${message ? ` ${message}` : ''}${meta && Object.keys(meta).length ? ' ' + JSON.stringify(meta) : ''}`;
+                })
+            ),
+        }),
+    ],
 });
 
 morgan.token('timestamp', MOMENT_FORMAT_NOW);

@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.2.3",
+  "version": "2.3.0",
   "description": "Logging module common to Craig's packages",
   "publishConfig": {
     "access": "public"
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/hughescr/shared-logger#readme",
   "engines": {
-    "node": ">=5.x"
+    "node": ">=10.x"
   },
   "devDependencies": {
     "@hughescr/eslint-config-default": "^2.4.6",
