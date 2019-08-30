@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/hughescr/shared-logger#readme",
   "engines": {
-    "node": ">=5.x"
+    "node": ">=10.x"
   },
   "devDependencies": {
     "@hughescr/eslint-config-default": "^2.4.6",
