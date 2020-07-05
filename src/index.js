@@ -31,7 +31,7 @@ const logger = winston.createLogger({
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }) => {
                     if(message instanceof Object) {
-                        message = JSON.stringify(message);
+                        message = JSON.stringify(message); // eslint-disable-line no-param-reassign
                     }
                     if(level == 'noprefix') {
                         return message;
