@@ -15,5 +15,7 @@ module.exports =
     {
         'if-in-test/if':                  ['warn', { directory: 'test' }],
         'should-promised/return-promise': 'error',
+        'sonarjs/no-duplicate-string':    'off',
+        'sonarjs/no-identical-functions': 'off',
     }
 };
