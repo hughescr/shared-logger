@@ -6,6 +6,5 @@ module.exports =
     rules:
     {
         'no-console': 'off',
-        'lodash/prefer-lodash-method': 'off',
     },
 };

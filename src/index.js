@@ -1,7 +1,9 @@
 'use strict';
 
+const _                  = require('lodash');
+
 const orig_console = {};
-['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
+_.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
 
 const util               = require('util');
 const winston            = require('winston');
@@ -14,9 +16,11 @@ function MOMENT_FORMAT_NOW() {
     return moment().utc().format(MOMENT_FORMAT);
 }
 
+const noprefix = 'noprefix';
+
 const logger = winston.createLogger({
     levels: {
-        noprefix: 0,
+        [noprefix]: 0,
         info: 1,
         warn: 2,
         error: 3,
@@ -31,13 +35,13 @@ const logger = winston.createLogger({
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }) => {
                     if(message instanceof Object) {
-                        message = JSON.stringify(message); // eslint-disable-line no-param-reassign
+                        message = JSON.stringify(message); // eslint-disable-line no-param-reassign -- I have to over-ride message here
                     }
-                    if(level == 'noprefix') {
-                        return message;
+                    if(level === noprefix) {
+                        return _.trim(message);
                     }
 
-                    return `[${timestamp}] [${level.toUpperCase()}]${message ? ` ${message}` : ''}${meta && Object.keys(meta).length ? ' ' + JSON.stringify(meta) : ''}`;
+                    return `[${timestamp}] [${_.toUpper(level)}]${message ? ` ${message}` : ''}${meta && _.size(meta) ? ' ' + JSON.stringify(meta) : ''}`;
                 })
             ),
         }),
@@ -45,8 +49,8 @@ const logger = winston.createLogger({
 });
 
 morgan.token('timestamp', MOMENT_FORMAT_NOW);
-morgan.token('route',     req => req.route && req.route.path || '***');
-morgan.token('user',      req => req.user  && req.user._id);
+morgan.token('route',     req => _.get(req, 'route.path', '***'));
+morgan.token('user',      req => _.get(req, 'user._id', '-'));
 
 morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
     const status = res._header ? res.statusCode : undefined;
@@ -63,26 +67,28 @@ morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
     // Build up format string for Morgan
     let fn = myDevFormatLine[`colorFormatter${color}`]; // Cache the format lines so we don't have to keep recompiling
     if(!fn) {
-        fn = myDevFormatLine[`colorFormatter${color}`] = morgan.compile('[:timestamp] \x1b[90m:method :url :route \x1b[' + color + 'm:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~');
+        fn = myDevFormatLine[`colorFormatter${color}`] = morgan.compile(`[:timestamp] \x1b[90m:method :url :route \x1b[${color}m:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~`);
     }
 
     return fn(tokens, req, res);
 });
 
 const replacement_console = {};
-['log', 'info', 'warn', 'error'].forEach(f => {
+_.forEach(['log', 'info', 'warn', 'error'], f => {
     replacement_console[f] = function hideMe() {
         const args = Array.prototype.slice.call(arguments);
-        if(args[args.length - 1] instanceof Object && !args[args.length - 1].source) { // Set source to "console" if not already set to something else
-            args[args.length - 1].source = 'console';
-        } else if(!(args[args.length - 1] instanceof Object && args[args.length - 1].source)) {
+        let lastArg = _.last(args);
+        if(lastArg && _.isObject(lastArg) && lastArg.source === undefined) { // Set source to "console" if not already set to something else
+            lastArg.source = 'console';
+        } else if(!_.isObject(lastArg)) {
             args.push({ source: 'console' });
         }
 
-        if(f == 'error' && !args[args.length - 1].stacktrace) { // If this is an error, attach a stacktrace
+        lastArg = _.last(args);
+        if(f == 'error' && !lastArg.stacktrace) { // If this is an error, attach a stacktrace
             const stackTrace = { name: 'Stacktrace' };
             Error.captureStackTrace(stackTrace, hideMe);
-            args[args.length - 1].stacktrace = stackTrace.stack;
+            lastArg.stacktrace = stackTrace.stack;
         }
 
         // Winston has no "log", just "info"
@@ -94,13 +100,14 @@ replacement_console.dir = function(obj, options) {
 };
 
 logger.restoreConsole = function() {
-    Object.assign(console, orig_console);
+    _.assign(console, orig_console);
 };
 
 logger.interceptConsole = function() {
-    Object.assign(console, replacement_console);
+    _.assign(console, replacement_console);
 };
 
-logger.stream = { write: function(msg) { logger.log('noprefix', msg.trim()); } };
+logger.stream = { write: function(msg) { logger.log(noprefix, msg); } };
 module.exports.middleware = morgan('mydev', { stream: logger.stream });
 module.exports.logger = logger;
+module.exports.noprefix = noprefix;

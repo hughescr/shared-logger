@@ -3,6 +3,7 @@
 const loggers       = require('../src');
 const logger        = loggers.logger;
 const expressLogger = loggers.middleware;
+const loggerStream  = logger.stream;
 const chai          = require('chai');
 const expect        = chai.expect;
 
@@ -11,12 +12,15 @@ const request       = require('supertest');
 
 const morgan        = require('morgan');
 
+const _             = require('lodash');
+
 describe('Logging', () => {
     describe('Basic logger', () => {
         it('should provide a "logger" and "middleware"', () => {
             expect(loggers.logger).to.be.instanceof(Object);
             expect(loggers.middleware).to.be.instanceof(Object);
             expect(loggers.logger.level).to.be.equal('debug');
+            expect(loggers.noprefix).to.be.equal('noprefix');
         });
 
         it('morgan should have some things defined', () => {
@@ -27,7 +31,7 @@ describe('Logging', () => {
         });
 
         describe('Methods', () => {
-            ['info', 'warn', 'error', 'debug'].forEach(level => {
+            _.forEach(['info', 'warn', 'error', 'debug'], level => {
                 it(`logger should have a method for logging at level ${level}`, () => {
                     expect(logger).to.have.property(level)
                         .which.is.an.instanceof(Function);
@@ -81,35 +85,35 @@ describe('Logging', () => {
 
         it('intercepting and restoring console should work', () => {
             const orig_console = {};
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
             logger.interceptConsole();
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.not.equal(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).to.not.equal(orig_console[f]); });
             logger.restoreConsole();
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).to.equal(orig_console[f]); });
         });
 
         it('intercepting and restoring console multiple times should work', () => {
             const orig_console = {};
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { orig_console[f] = console[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
             logger.interceptConsole();
             logger.interceptConsole();
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.not.equal(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).to.not.equal(orig_console[f]); });
 
             logger.restoreConsole();
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).to.equal(orig_console[f]); });
             logger.restoreConsole();
-            ['log', 'info', 'warn', 'error', 'dir'].forEach(f => { expect(console[f]).to.equal(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).to.equal(orig_console[f]); });
         });
 
         describe('Methods', () => {
-            ['log', 'info', 'warn'].forEach(level => {
+            _.forEach(['log', 'info', 'warn'], level => {
                 it(`Check level ${level} on console with no arg`, () => {
                     const hook = captureStream(process.stdout);
                     logger.interceptConsole();
                     console[level]();
                     logger.restoreConsole();
                     hook.unhook();
-                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[${level.replace('log', 'info').toLocaleUpperCase()}\\] \\{"source":"console"\\}\\n$`));
+                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[${_.toUpper(_.replace(level, 'log', 'info'))}\\] \\{"source":"console"\\}\\n$`));
                 });
 
                 it(`Check level ${level} on console`, () => {
@@ -118,7 +122,7 @@ describe('Logging', () => {
                     console[level]('hi');
                     logger.restoreConsole();
                     hook.unhook();
-                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[${level.replace('log', 'info').toLocaleUpperCase()}\\] hi \\{"source":"console"\\}\\n$`));
+                    expect(hook.captured()).to.match(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[${_.toUpper(_.replace(level, 'log', 'info'))}\\] hi \\{"source":"console"\\}\\n$`));
                 });
             });
 
@@ -129,7 +133,7 @@ describe('Logging', () => {
                 logger.restoreConsole();
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] \\{"source":"console","stacktrace":"Stacktrace[^)]*/test/index.js:[^}]*\\}\\n$'));
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \[ERROR\] \{"source":"console","stacktrace":"Stacktrace[^)]*\/test\/index.js:[^}]*\}\n$/);
             });
 
             it('Check level error on console', () => {
@@ -139,7 +143,7 @@ describe('Logging', () => {
                 logger.restoreConsole();
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] hi \\{"source":"console","stacktrace":"Stacktrace[^)]*/test/index.js:[^}]*\\}\\n$'));
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \[ERROR\] hi \{"source":"console","stacktrace":"Stacktrace[^)]*\/test\/index.js:[^}]*\}\n$/);
             });
 
             it('Check dir helper on console', () => {
@@ -149,7 +153,7 @@ describe('Logging', () => {
                 logger.restoreConsole();
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[INFO\\] \\{ some: \\\'object\\\' \\} \\{"source":"console"}\\n$'));
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \[INFO\] \{ some: 'object' \} \{"source":"console"\}\n$/);
             });
         });
 
@@ -189,6 +193,10 @@ describe('Logging', () => {
             expect(expressLogger).to.be.instanceof(Function);
         });
 
+        it('should provide a stream for logger', () => {
+            expect(loggerStream).to.be.exist.and.have.property('write').which.is.instanceof(Function);
+        });
+
         it('express middleware should log things', done => {
             const hook = captureStream(process.stdout);
 
@@ -202,7 +210,7 @@ describe('Logging', () => {
             .expect(() => {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\S*GET /some/path \\*\\*\\* [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~-~\\n$'));
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \*\*\* [^ ]*32m200 \S*[\d.]+ms http:\/\/example.com\/some\/referrer \S*\[[^\]]*\] ~-~\n$/);
             })
             .end(done);
         });
@@ -251,19 +259,19 @@ describe('Logging', () => {
             .expect(() => {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(new RegExp('^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\S*GET /some/path /some/fake/route/path [^ ]*32m200 \\S*[0-9.]+ms http://example.com/some/referrer \\S*\\[[^\\]]*\\] ~fake_user_id~\\n$'));
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \/some\/fake\/route\/path [^ ]*32m200 \S*[\d.]+ms http:\/\/example.com\/some\/referrer \S*\[[^\]]*\] ~fake_user_id~\n$/);
             })
             .end(done);
         });
 
         it('express middleware should handle case of logging where there is no res._header');
 
-        [
+        _.forEach([
             [200, 32],
             [300, 36],
             [400, 33],
             [500, 31],
-        ].forEach(status_color => {
+        ], status_color => {
             it(`express middleware should colorize status ${status_color[0]} properly`, done => {
                 const hook = captureStream(process.stdout);
 
@@ -287,7 +295,7 @@ describe('Logging', () => {
 });
 
 function captureStream(stream) {
-    const oldWrite = stream.write;
+    stream.oldWrite = stream.write;
     let buf = '';
     stream.write = function(chunk) {
         buf += chunk.toString(); // chunk is a String or Buffer
@@ -295,7 +303,7 @@ function captureStream(stream) {
 
     return {
         unhook: function unhook() {
-            stream.write = oldWrite;
+            stream.write = stream.oldWrite;
         },
 
         captured: function() {
