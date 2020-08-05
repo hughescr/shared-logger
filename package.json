@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Logging module common to Craig's packages",
   "publishConfig": {
     "access": "public"
@@ -27,21 +27,22 @@
     "node": ">=10.x"
   },
   "devDependencies": {
-    "@hughescr/eslint-config-default": "^2.4.9",
+    "@hughescr/eslint-config-default": "^2.8.2",
     "@stryker-mutator/core": "^3.3.1",
     "@stryker-mutator/javascript-mutator": "^3.3.1",
     "@stryker-mutator/mocha-framework": "^3.3.1",
     "@stryker-mutator/mocha-runner": "^3.3.1",
     "chai": "^4.2.0",
-    "eslint": "^7.4.0",
+    "eslint": "^7.6.0",
     "eslint-plugin-if-in-test": "^0.2.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-should-promised": "^2.0.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.1.1",
     "split": "^1.0.0",
     "supertest": "^4.0.2"
   },
   "dependencies": {
+    "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "morgan": "^1.10.0",
     "winston": "^3.3.3"
