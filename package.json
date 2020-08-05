@@ -27,7 +27,7 @@
     "node": ">=10.x"
   },
   "devDependencies": {
-    "@hughescr/eslint-config-default": "^2.8.1",
+    "@hughescr/eslint-config-default": "^2.8.2",
     "@stryker-mutator/core": "^3.3.1",
     "@stryker-mutator/javascript-mutator": "^3.3.1",
     "@stryker-mutator/mocha-framework": "^3.3.1",
