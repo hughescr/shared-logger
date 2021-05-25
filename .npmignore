@@ -10,3 +10,4 @@ test
 coverage
 .nyc_output
 reports
+stryker.conf.js
