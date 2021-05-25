@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "description": "Logging module common to Craig's packages",
   "publishConfig": {
     "access": "public"
