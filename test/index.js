@@ -52,7 +52,7 @@ describe('Logging', () => {
             logger.info('hi', { some: 'object' });
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO] hi \{"some":"object"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO\] hi \{"some":"object"\}\n$/);
         });
 
         it('logging should allow empty message', () => {
@@ -60,7 +60,7 @@ describe('Logging', () => {
             logger.info();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO]\n$/);
+            expect(hook.captured()).to.match(/\[INFO\]\n$/);
         });
 
         it('logging should message with just object', () => {
@@ -68,7 +68,7 @@ describe('Logging', () => {
             logger.info({ some: 'object' });
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO] \{"some":"object"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO\] \{"some":"object"\}\n$/);
         });
     });
 
@@ -164,7 +164,7 @@ describe('Logging', () => {
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO] \{"source":"console"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO\] \{"source":"console"\}\n$/);
         });
 
         it('console logging overriding source should work', () => {
@@ -174,7 +174,7 @@ describe('Logging', () => {
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO] hi \{"source":"other"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO\] hi \{"source":"other"\}\n$/);
         });
 
         it('console logging an object should work', () => {
@@ -184,7 +184,7 @@ describe('Logging', () => {
             logger.restoreConsole();
             hook.unhook();
 
-            expect(hook.captured()).to.match(/\[INFO] hi \{"some":"object","source":"console"\}\n$/);
+            expect(hook.captured()).to.match(/\[INFO\] hi \{"some":"object","source":"console"\}\n$/);
         });
     });
 
@@ -210,7 +210,7 @@ describe('Logging', () => {
             .expect(() => {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \*\*\* [^ ]*32m200 \S*[\d.]+ms http:\/\/example.com\/some\/referrer \S*\[[^\]]*\] ~-~\n$/);
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \*\*\* [^ ]*32m200 \S*[\d.]ms http:\/\/example.com\/some\/referrer [^[]*\[[^\]]*\] ~-~\n$/);
             })
             .end(done);
         });
@@ -259,7 +259,7 @@ describe('Logging', () => {
             .expect(() => {
                 hook.unhook();
 
-                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \/some\/fake\/route\/path [^ ]*32m200 \S*[\d.]+ms http:\/\/example.com\/some\/referrer \S*\[[^\]]*\] ~fake_user_id~\n$/);
+                expect(hook.captured()).to.match(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \S*GET \/some\/path \/some\/fake\/route\/path [^ ]*32m200 \S*[\d.]ms http:\/\/example.com\/some\/referrer [^[]*\[[^\]]*\] ~fake_user_id~\n$/);
             })
             .end(done);
         });
