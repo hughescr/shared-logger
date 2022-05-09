@@ -1,7 +1,6 @@
 'use strict';
 
-module.exports = function(config) {
-  config.set({
+module.exports = {
     mutator: 'javascript',
     packageManager: 'yarn',
     reporters: ['html', 'clear-text', 'progress'],
@@ -9,5 +8,4 @@ module.exports = function(config) {
     transpilers: [],
     testFramework: 'mocha',
     coverageAnalysis: 'perTest',
-  });
 };

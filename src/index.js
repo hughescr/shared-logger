@@ -7,13 +7,11 @@ _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = cons
 
 const util               = require('util');
 const winston            = require('winston');
-const moment             = require('moment');
+const { DateTime }             = require('luxon');
 const morgan             = require('morgan');
 
-const MOMENT_FORMAT      = 'YYYY-MM-DDTHH:mm:ss.SSSZZ';
-
-function MOMENT_FORMAT_NOW() {
-    return moment().utc().format(MOMENT_FORMAT);
+function LUXON_FORMAT_NOW() {
+    return DateTime.utc().toISO();
 }
 
 const noprefix = 'noprefix';
@@ -41,14 +39,14 @@ const logger = winston.createLogger({
                         return _.trim(message);
                     }
 
-                    return `[${timestamp}] [${_.toUpper(level)}]${message ? ` ${message}` : ''}${meta && _.size(meta) ? ' ' + JSON.stringify(meta) : ''}`;
+                    return `[${timestamp}] [${_.toUpper(level)}]${message ? ' ' + message : ''}${meta && _.size(meta) ? ' ' + JSON.stringify(meta) : ''}`;
                 })
             ),
         }),
     ],
 });
 
-morgan.token('timestamp', MOMENT_FORMAT_NOW);
+morgan.token('timestamp', LUXON_FORMAT_NOW);
 morgan.token('route',     req => _.get(req, 'route.path', '***'));
 morgan.token('user',      req => _.get(req, 'user._id', '-'));
 
