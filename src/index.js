@@ -18,11 +18,11 @@ const noprefix = 'noprefix';
 
 const logger = winston.createLogger({
     levels: {
-        [noprefix]: 0,
-        info: 1,
-        warn: 2,
-        error: 3,
-        debug: 4,
+        error: 0,
+        warn: 1,
+        info: 2,
+        [noprefix]: 2,
+        debug: 3,
     },
     level: 'debug',
     transports: [
