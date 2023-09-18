@@ -44,8 +44,12 @@ describe('Logging', () => {
 
                 it(`logging at level ${level} should have proper format`, () => {
                     expect.assertions(1);
-                    const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                    // Jest hooks console._stderr up to stdout so we need to undo that to test here
+                    const oldStderr = console._stderr;
+                    console._stderr = process.stderr;
+                    const spyOnStream = jest.spyOn((level == 'error' || level == 'debug') ? console._stderr : console._stdout, 'write').mockImplementation(_.noop);
                     logger[level]('hi');
+                    console._stderr = oldStderr;
 
                     expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[${level.toLocaleUpperCase()}\\] hi\\n$`)));
                 });
@@ -54,7 +58,7 @@ describe('Logging', () => {
 
         it('logging should allow passing an object', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.info('hi', { some: 'object' });
 
             expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hi \{"some":"object"\}\n$/));
@@ -62,7 +66,7 @@ describe('Logging', () => {
 
         it('logging should allow empty message', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.info();
 
             expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\]\n$/));
@@ -70,7 +74,7 @@ describe('Logging', () => {
 
         it('logging should message with just object', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.info({ some: 'object' });
 
             expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] \{"some":"object"\}\n$/));
@@ -120,7 +124,7 @@ describe('Logging', () => {
             _.forEach(['log', 'info', 'warn'], level => {
                 it(`Check level ${level} on console with no arg`, () => {
                     expect.assertions(1);
-                    const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                    const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
                     logger.interceptConsole();
                     console[level]();
                     logger.restoreConsole();
@@ -129,7 +133,7 @@ describe('Logging', () => {
 
                 it(`Check level ${level} on console`, () => {
                     expect.assertions(1);
-                    const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                    const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
                     logger.interceptConsole();
                     console[level]('hi');
                     logger.restoreConsole();
@@ -139,27 +143,35 @@ describe('Logging', () => {
 
             it('Check level error on console with no arg', () => {
                 expect.assertions(1);
-                const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                // Jest hooks console._stderr up to stdout so we need to undo that to test here
+                const oldStderr = console._stderr;
+                console._stderr = process.stderr;
+                const spyOnStream = jest.spyOn(console._stderr, 'write').mockImplementation(_.noop);
                 logger.interceptConsole();
                 console.error();
                 logger.restoreConsole();
+                console._stderr = oldStderr;
 
                 expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] \\{"source":"console","stacktrace":"Stacktrace[^)]*${myTestPath}:[^}]*\\}\n$`)));
             });
 
             it('Check level error on console', () => {
                 expect.assertions(1);
-                const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                // Jest hooks console._stderr up to stdout so we need to undo that to test here
+                const oldStderr = console._stderr;
+                console._stderr = process.stderr;
+                const spyOnStream = jest.spyOn(console._stderr, 'write').mockImplementation(_.noop);
                 logger.interceptConsole();
                 console.error('hi');
                 logger.restoreConsole();
+                console._stderr = oldStderr;
 
                 expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] hi \\{"source":"console","stacktrace":"Stacktrace[^)]*${myTestPath}:[^}]*\\}\n$`)));
             });
 
             it('Check dir helper on console', () => {
                 expect.assertions(1);
-                const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
                 logger.interceptConsole();
                 console.dir({ some: 'object' });
                 logger.restoreConsole();
@@ -170,7 +182,7 @@ describe('Logging', () => {
 
         it('console logging an empty message should work', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.interceptConsole();
             console.log();
             logger.restoreConsole();
@@ -180,7 +192,7 @@ describe('Logging', () => {
 
         it('console logging overriding source should work', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.interceptConsole();
             console.log('hi', { source: 'other' });
             logger.restoreConsole();
@@ -190,7 +202,7 @@ describe('Logging', () => {
 
         it('console logging an object should work', () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             logger.interceptConsole();
             console.log('hi', { some: 'object' });
             logger.restoreConsole();
@@ -216,7 +228,7 @@ describe('Logging', () => {
 
         it('express middleware should log things', async () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
 
             return request(http.createServer((req, res) => {
                 return expressLogger(req, res, function onNext() {
@@ -232,7 +244,7 @@ describe('Logging', () => {
 
         it('express middleware should create color formatter which is re-used', async () => {
             expect.assertions(6);
-            jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             let origFormatter;
 
             return request(http.createServer((req, res) => {
@@ -264,7 +276,7 @@ describe('Logging', () => {
 
         it('express middleware should handle request details', async () => {
             expect.assertions(1);
-            const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+            const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
 
             return request(http.createServer((req, res) => {
                 return expressLogger(req, res, function onNext() {
@@ -290,7 +302,7 @@ describe('Logging', () => {
         ], status_color => {
             it(`express middleware should colorize status ${status_color[0]} properly`, async () => {
                 expect.assertions(2);
-                const spyOnStream = jest.spyOn(process.stdout, 'write').mockImplementation(_.noop);
+                const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
 
                 return request(http.createServer((req, res) => {
                     return expressLogger(req, res, function onNext() {
