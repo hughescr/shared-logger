@@ -7,7 +7,7 @@ _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = cons
 
 const util               = require('util');
 const winston            = require('winston');
-const { DateTime }             = require('luxon');
+const { DateTime }       = require('luxon');
 const morgan             = require('morgan');
 
 function LUXON_FORMAT_NOW() {
@@ -48,7 +48,7 @@ const logger = winston.createLogger({
 
 morgan.token('timestamp', LUXON_FORMAT_NOW);
 morgan.token('route',     req => _.get(req, 'route.path', '***'));
-morgan.token('user',      req => _.get(req, 'user._id', '-'));
+morgan.token('user',      req => _.get(req, 'user._id')); // defaults to '-' even if you specify ''
 
 morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
     const status = res._header ? res.statusCode : undefined;
