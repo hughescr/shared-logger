@@ -3,7 +3,7 @@
 const loggers       = require('../src');
 const logger        = loggers.logger;
 const expressLogger = loggers.middleware;
-const loggerStream  = logger.stream;
+const loggerStream  = logger.morganStream;
 
 const http          = require('http');
 const request       = require('supertest');

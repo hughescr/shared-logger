@@ -5,7 +5,8 @@ const _                  = require('lodash');
 const orig_console = {};
 _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
 
-const util               = require('util');
+const { inspect }        = require('node:util');
+const { Writable }       = require('node:stream');
 const winston            = require('winston');
 const { DateTime }       = require('luxon');
 const morgan             = require('morgan');
@@ -94,7 +95,7 @@ _.forEach(['log', 'info', 'warn', 'error'], f => {
     };
 });
 replacement_console.dir = function(obj, options) {
-    logger.info(util.inspect(obj, options), { source: 'console' });
+    logger.info(inspect(obj, options), { source: 'console' });
 };
 
 logger.restoreConsole = function() {
@@ -105,7 +106,13 @@ logger.interceptConsole = function() {
     _.assign(console, replacement_console);
 };
 
-logger.stream = { write: function(msg) { logger.log(noprefix, msg); } };
-module.exports.middleware = morgan('mydev', { stream: logger.stream });
+logger.morganStream = new Writable({
+    write(chunk, encoding, callback) {
+        logger.log({ level: noprefix, message: chunk.toString('utf8') });
+        callback();
+    }
+});
+// Stryker disable next-line ObjectLiteral: By default morgan will hook up to a stream that does the same thing
+module.exports.middleware = morgan('mydev', { stream: logger.morganStream });
 module.exports.logger = logger;
 module.exports.noprefix = noprefix;
