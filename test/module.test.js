@@ -12,6 +12,8 @@ const morgan        = require('morgan');
 
 const _             = require('lodash');
 
+const okResponse = (req, res) => expressLogger(req, res, function onNext() { res.end('OK'); });
+
 const myTestPath = module.filename.slice(module.filename.lastIndexOf(require('path').sep, module.filename.lastIndexOf(require('path').sep) - 1) + 1, module.filename.length);
 
 describe('Logging', () => {
@@ -230,11 +232,7 @@ describe('Logging', () => {
             expect.assertions(1);
             const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
 
-            return request(http.createServer((req, res) => {
-                return expressLogger(req, res, function onNext() {
-                    res.end('OK');
-                });
-            }))
+            return request(http.createServer(okResponse))
             .get('/some/path')
             .set('Referrer', 'http://example.com/some/referrer')
             .expect(() => {
@@ -247,11 +245,7 @@ describe('Logging', () => {
             jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
             let origFormatter;
 
-            return request(http.createServer((req, res) => {
-                return expressLogger(req, res, function onNext() {
-                    res.end('OK');
-                });
-            }))
+            return request(http.createServer(okResponse))
             .get('/some/path')
             .expect(() => {
                 expect(morgan).toHaveProperty('mydev');
@@ -260,11 +254,7 @@ describe('Logging', () => {
                 origFormatter = morgan.mydev.colorFormatter32;
             })
             .then(() => {
-                return request(http.createServer((req, res) => {
-                    return expressLogger(req, res, function onNext() {
-                        res.end('OK');
-                    });
-                }))
+                return request(http.createServer(okResponse))
                 .get('/some/path')
                 .expect(() => {
                     expect(morgan).toHaveProperty('mydev');
