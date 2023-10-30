@@ -5,9 +5,10 @@ const _                  = require('lodash');
 const orig_console = {};
 _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
 
-const util               = require('util');
+const { inspect }        = require('node:util');
+const { Writable }       = require('node:stream');
 const winston            = require('winston');
-const { DateTime }             = require('luxon');
+const { DateTime }       = require('luxon');
 const morgan             = require('morgan');
 
 function LUXON_FORMAT_NOW() {
@@ -18,11 +19,11 @@ const noprefix = 'noprefix';
 
 const logger = winston.createLogger({
     levels: {
-        [noprefix]: 0,
-        info: 1,
-        warn: 2,
-        error: 3,
-        debug: 4,
+        error: 0,
+        warn: 1,
+        info: 2,
+        [noprefix]: 2,
+        debug: 3,
     },
     level: 'debug',
     transports: [
@@ -48,7 +49,7 @@ const logger = winston.createLogger({
 
 morgan.token('timestamp', LUXON_FORMAT_NOW);
 morgan.token('route',     req => _.get(req, 'route.path', '***'));
-morgan.token('user',      req => _.get(req, 'user._id', '-'));
+morgan.token('user',      req => _.get(req, 'user._id')); // defaults to '-' even if you specify ''
 
 morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
     const status = res._header ? res.statusCode : undefined;
@@ -94,7 +95,7 @@ _.forEach(['log', 'info', 'warn', 'error'], f => {
     };
 });
 replacement_console.dir = function(obj, options) {
-    logger.info(util.inspect(obj, options), { source: 'console' });
+    logger.info(inspect(obj, options), { source: 'console' });
 };
 
 logger.restoreConsole = function() {
@@ -105,7 +106,13 @@ logger.interceptConsole = function() {
     _.assign(console, replacement_console);
 };
 
-logger.stream = { write: function(msg) { logger.log(noprefix, msg); } };
-module.exports.middleware = morgan('mydev', { stream: logger.stream });
+logger.morganStream = new Writable({
+    write(chunk, encoding, callback) {
+        logger.log({ level: noprefix, message: chunk.toString('utf8') });
+        callback();
+    }
+});
+// Stryker disable next-line ObjectLiteral: By default morgan will hook up to a stream that does the same thing
+module.exports.middleware = morgan('mydev', { stream: logger.morganStream });
 module.exports.logger = logger;
 module.exports.noprefix = noprefix;
