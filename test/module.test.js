@@ -1,18 +1,23 @@
-const loggers       = require('../src');
+import { describe, it, expect, beforeEach, afterEach, jest } from 'bun:test';
+
+import * as loggers from '../src/index.js';
 const logger        = loggers.logger;
 const expressLogger = loggers.middleware;
 const loggerStream  = logger.morganStream;
 
-const http          = require('http');
-const request       = require('supertest');
+import http from 'node:http';
+import request from 'supertest';
 
-const morgan        = require('morgan');
+import morgan from 'morgan';
 
-const _             = require('lodash');
+import _ from 'lodash';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const okResponse = (req, res) => expressLogger(req, res, function onNext() { res.end('OK'); });
 
-const myTestPath = module.filename.slice(module.filename.lastIndexOf(require('path').sep, module.filename.lastIndexOf(require('path').sep) - 1) + 1, module.filename.length);
+const __filename = fileURLToPath(import.meta.url);
+const myTestPath = __filename.slice(__filename.lastIndexOf(path.sep, __filename.lastIndexOf(path.sep) - 1) + 1, __filename.length);
 
 describe('Logging', () => {
     describe('Basic logger', () => {
@@ -152,7 +157,7 @@ describe('Logging', () => {
                 logger.restoreConsole();
                 console._stderr = oldStderr;
 
-                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] \\{"source":"console","stacktrace":"Stacktrace[^)]*${myTestPath}:[^}]*\\}\n$`)));
+                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] \\{"source":"console","stacktrace":"[^)]*${myTestPath}:[^}]*\\}\n$`)));
             });
 
             it('Check level error on console', () => {
@@ -166,7 +171,7 @@ describe('Logging', () => {
                 logger.restoreConsole();
                 console._stderr = oldStderr;
 
-                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] hi \\{"source":"console","stacktrace":"Stacktrace[^)]*${myTestPath}:[^}]*\\}\n$`)));
+                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}(\\+0000|Z)\\] \\[ERROR\\] hi \\{"source":"console","stacktrace":"[^)]*${myTestPath}:[^}]*\\}\n$`)));
             });
 
             it('Check dir helper on console', () => {
@@ -280,7 +285,7 @@ describe('Logging', () => {
                 });
         });
 
-        test.todo('express middleware should handle case of logging where there is no res._header');
+        it.todo('express middleware should handle case of logging where there is no res._header');
 
         _.forEach([
             [200, 32],
