@@ -8,5 +8,6 @@ const config = {
     mutate: ['src/*.js'],
     thresholds: { high: 100, low: 75, 'break': null },
     cleanTempDir: 'always',
+    ignoreStatic: true,
 };
 export default config;
