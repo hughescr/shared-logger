@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@hughescr/eslint-config-default": "^2.8.8",
-    "@stryker-mutator/core": "^7.3.0",
-    "@stryker-mutator/jest-runner": "^7.3.0",
+    "@stryker-mutator/core": "^9.0.1",
+    "@stryker-mutator/jest-runner": "^9.0.1",
     "eslint": "^8.57.1",
     "eslint-plugin-jest": "^27.9.0",
     "eslint-plugin-promise": "^6.6.0",
@@ -40,7 +40,7 @@
     "jest-log-failure-reporter": "^1.0.0",
     "split": "^1.0.1",
     "stryker-cli": "^1.0.2",
-    "supertest": "^6.3.4"
+    "supertest": "^7.1.1"
   },
   "dependencies": {
     "lodash": "^4.17.21",
