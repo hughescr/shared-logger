@@ -1,15 +1,12 @@
-'use strict';
-
-const _                  = require('lodash');
+import _ from 'lodash';
+import { inspect } from 'node:util';
+import { Writable } from 'node:stream';
+import winston from 'winston';
+import { DateTime } from 'luxon';
+import morgan from 'morgan';
 
 const orig_console = {};
-_.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
-
-const { inspect }        = require('node:util');
-const { Writable }       = require('node:stream');
-const winston            = require('winston');
-const { DateTime }       = require('luxon');
-const morgan             = require('morgan');
+_.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = console[f]; });
 
 function LUXON_FORMAT_NOW() {
     return DateTime.utc().toISO();
@@ -73,7 +70,7 @@ morgan.format('mydev', function myDevFormatLine(tokens, req, res) {
 });
 
 const replacement_console = {};
-_.forEach(['log', 'info', 'warn', 'error'], f => {
+_.forEach(['log', 'info', 'warn', 'error'], (f) => {
     replacement_console[f] = function hideMe() {
         const args = Array.prototype.slice.call(arguments);
         let lastArg = _.last(args);
@@ -113,6 +110,5 @@ logger.morganStream = new Writable({
     }
 });
 // Stryker disable next-line ObjectLiteral: By default morgan will hook up to a stream that does the same thing
-module.exports.middleware = morgan('mydev', { stream: logger.morganStream });
-module.exports.logger = logger;
-module.exports.noprefix = noprefix;
+export const middleware = morgan('mydev', { stream: logger.morganStream });
+export { logger, noprefix };
