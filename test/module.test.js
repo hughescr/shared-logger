@@ -1,5 +1,3 @@
-'use strict';
-
 const loggers       = require('../src');
 const logger        = loggers.logger;
 const expressLogger = loggers.middleware;
@@ -38,7 +36,7 @@ describe('Logging', () => {
                 jest.restoreAllMocks();
             });
 
-            _.forEach(['info', 'warn', 'error', 'debug'], level => {
+            _.forEach(['info', 'warn', 'error', 'debug'], (level) => {
                 it(`logger should have a method for logging at level ${level}`, () => {
                     expect.assertions(1);
                     expect(logger).toHaveProperty(level, expect.any(Function));
@@ -97,25 +95,25 @@ describe('Logging', () => {
         it('intercepting and restoring console should work', () => {
             expect.assertions(10);
             const orig_console = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = console[f]; });
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(console[f]).not.toBe(orig_console[f]); });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(console[f]).toBe(orig_console[f]); });
         });
 
         it('intercepting and restoring console multiple times should work', () => {
             expect.assertions(15);
             const orig_console = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { orig_console[f] = console[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = console[f]; });
             logger.interceptConsole();
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(console[f]).not.toBe(orig_console[f]); });
 
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(console[f]).toBe(orig_console[f]); });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], f => { expect(console[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(console[f]).toBe(orig_console[f]); });
         });
 
         describe('Methods', () => {
@@ -123,7 +121,7 @@ describe('Logging', () => {
                 jest.restoreAllMocks();
             });
 
-            _.forEach(['log', 'info', 'warn'], level => {
+            _.forEach(['log', 'info', 'warn'], (level) => {
                 it(`Check level ${level} on console with no arg`, () => {
                     expect.assertions(1);
                     const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
@@ -289,7 +287,7 @@ describe('Logging', () => {
             [300, 36],
             [400, 33],
             [500, 31],
-        ], status_color => {
+        ], (status_color) => {
             it(`express middleware should colorize status ${status_color[0]} properly`, async () => {
                 expect.assertions(2);
                 const spyOnStream = jest.spyOn(console._stdout, 'write').mockImplementation(_.noop);
