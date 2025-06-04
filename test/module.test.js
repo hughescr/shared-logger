@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, afterEach, jest } from 'bun:test';
 
 import * as loggers from '../src/index.js';
 const logger        = loggers.logger;

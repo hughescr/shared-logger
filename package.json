@@ -13,8 +13,6 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "eslint . && jest",
-    "mutate": "stryker run",
     "lint": "eslint .",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
   },
@@ -31,8 +29,6 @@
   },
   "devDependencies": {
     "@hughescr/eslint-config-default": "^3.0.4",
-    "@stryker-mutator/core": "^9.0.1",
-    "@stryker-mutator/jest-runner": "^9.0.1",
     "@types/bun": "^1.2.15",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.29",
@@ -40,10 +36,7 @@
     "eslint-plugin-jest": "^28.12.0",
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-should-promised": "^2.0.0",
-    "jest": "^29.7.0",
-    "jest-log-failure-reporter": "^1.0.0",
     "split": "^1.0.1",
-    "stryker-cli": "^1.0.2",
     "supertest": "^7.1.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.33.1"
