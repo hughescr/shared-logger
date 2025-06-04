@@ -11,7 +11,7 @@
   "keywords": [
     "logging"
   ],
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "lint": "eslint .",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
@@ -31,6 +31,9 @@
     "@hughescr/eslint-config-default": "^3.0.4",
     "@types/bun": "^1.2.15",
     "@types/jest": "^29.5.14",
+    "@types/lodash": "^4.17.17",
+    "@types/luxon": "^3.6.2",
+    "@types/morgan": "^1.9.9",
     "@types/node": "^22.15.29",
     "eslint": "^9.28.0",
     "eslint-plugin-jest": "^28.12.0",
