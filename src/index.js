@@ -109,6 +109,5 @@ logger.morganStream = new Writable({
         callback();
     }
 });
-// Stryker disable next-line ObjectLiteral: By default morgan will hook up to a stream that does the same thing
 export const middleware = morgan('mydev', { stream: logger.morganStream });
 export { logger, noprefix };
