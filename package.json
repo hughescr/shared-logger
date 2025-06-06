@@ -13,7 +13,8 @@
   ],
   "main": "src/index.ts",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint --fix;tsc",
+    "mutate": "NODE_OPTIONS=--experimental-vm-modules bun x stryker run",
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge master"
   },
   "repository": {
@@ -29,6 +30,9 @@
   },
   "devDependencies": {
     "@hughescr/eslint-config-default": "^3.0.4",
+    "@stryker-mutator/core": "^9.0.1",
+    "@stryker-mutator/jest-runner": "^9.0.1",
+    "@stryker-mutator/typescript-checker": "^9.0.1",
     "@types/bun": "^1.2.15",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.17",
