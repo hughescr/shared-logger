@@ -4,3 +4,55 @@ Shared logger infrastructure
 ----------------------------
 
 I had a need for an easy-to-use logger across my various NodeJS projects.  This is it.  If you like it, feel free also to use it.  When I make releases, I push them to npm @hughescr/logger and that is probably the best/safest way to consume this package.  The `develop` branch and other github stuff might break compatibility at any time.  `master` is for releases and is what will be on npm at any given point in time, tagged with release numbers.
+
+## Installation
+
+Install the package via npm:
+
+```bash
+npm install @hughescr/logger
+```
+
+Or with bun:
+
+```bash
+bun add @hughescr/logger
+```
+
+## Basic usage
+
+```ts
+import { logger } from '@hughescr/logger';
+
+logger.info('starting up');
+```
+
+### Express middleware
+
+```ts
+import express from 'express';
+import { middleware } from '@hughescr/logger';
+
+const app = express();
+app.use(middleware);
+```
+
+## Intercepting console
+
+```ts
+import { logger } from '@hughescr/logger';
+
+logger.interceptConsole();
+console.log('captured');
+logger.restoreConsole();
+```
+
+## Development
+
+Run linting, type checking and tests with bun:
+
+```bash
+bun lint
+bun x tsc
+bun test
+```
