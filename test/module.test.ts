@@ -334,7 +334,26 @@ describe('Logging', () => {
                 });
         });
 
-        it.todo('express middleware should handle case of logging where there is no res._header');
+        it('express middleware should handle case of logging where there is no res._header', () => {
+            expect.assertions(1);
+            const req = {
+                method: 'GET',
+                url: '/some/path',
+                headers: { referrer: 'http://example.com/some/referrer' },
+                connection: { remoteAddress: '127.0.0.1' },
+                _startAt: [0, 0],
+            } as unknown as IncomingMessage;
+            const res = {
+                statusCode: 200,
+                _header: undefined,
+                _startAt: [0, 0],
+            } as unknown as ServerResponse;
+
+            const line = (morgan as unknown as Record<string, unknown>).mydev as (tokens: morgan.TokenIndexer<IncomingMessage, ServerResponse>, req: IncomingMessage, res: ServerResponse) => string;
+
+            const output = line(morgan as unknown as morgan.TokenIndexer<IncomingMessage, ServerResponse>, req, res);
+            expect(output).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}(\+0000|Z)\] \x1b\[90mGET \/some\/path \*\*\* \x1b\[32m- \x1b\[90m0\.00000ms http:\/\/example.com\/some\/referrer \x1b\[0m\[127.0.0.1\] ~-~$/);
+        });
 
         _.forEach([
             [200, 32],
