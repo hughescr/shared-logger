@@ -142,6 +142,32 @@ describe('Logging', () => {
             _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
         });
 
+        it('intercepting twice then restoring once should reset console', () => {
+            expect.assertions(8);
+            const orig_console: Record<string, (...args: unknown[]) => void> = {};
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+
+            logger.interceptConsole();
+            logger.interceptConsole();
+
+            const spyOnInfo = spyOn(methodLogger, 'info').mockImplementation(_.noop);
+            console.log('during');
+            expect(spyOnInfo).toHaveBeenCalledWith('during', { source: 'console' });
+
+            logger.restoreConsole();
+            spyOnInfo.mockClear();
+            const origLogSpy = spyOn(consoleStreams, 'log').mockImplementation(_.noop);
+            console.log('after');
+            expect(spyOnInfo).not.toHaveBeenCalled();
+            expect(origLogSpy).toHaveBeenCalledWith('after');
+            origLogSpy.mockRestore();
+            spyOnInfo.mockRestore();
+
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
+        });
+
         describe('Methods', () => {
             afterEach(() => {
                 jest.restoreAllMocks();
