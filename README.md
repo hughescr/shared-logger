@@ -56,3 +56,12 @@ bun lint
 bun x tsc
 bun test
 ```
+
+Run mutation testing with bun:
+
+```bash
+bun mutate
+```
+
+Mutation tests are expected to reach 100% coverage to ensure that
+the suite can detect unintended code changes.
