@@ -4,7 +4,6 @@ logger.sublime-*
 .eslintrc.js
 Gruntfile.js
 README.md
-.travis.yml
 
 test
 coverage
