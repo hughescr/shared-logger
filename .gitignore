@@ -39,3 +39,6 @@ reports/
 # Sublime workspace
 *.sublime-workspace
 .nyc_output/
+
+# Claude local config file
+.claude/settings.local.json
