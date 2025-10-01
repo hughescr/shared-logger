@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Tooling Expectations
+
+- **MCP tools before terminal:** Always prefer Claude's MCP tools (e.g., `Glob`, `Grep`, `Read`) before falling back to shell commands.
+- **Editing:** Use `mcp__language-server__edit_file` for TypeScript files to benefit from live diagnostics and type checking.
+- **Bun-first workflow:** Invoke project scripts via `bun`/`bunx`; avoid `npm`/`npx`.
+- **Watchers via tmux MCP:** Manage development watchers with the tmux MCP server (`mcp__tmux__list_workspaces`, `mcp__tmux__run_command`, `mcp__tmux__get_output`). Do not run `tsc --watch` or `bun test --watch` directly in background—use tmux windows instead.
+- **Lint enforcement:** Claude settings run ESLint automatically after each edit—review output and fix issues immediately.
+
+## Watcher Windows
+
+- Long-lived tmux windows: `tsc-watch`, `test-watch`. Do not close them once started.
+- Check for existing windows before launching new watchers using `mcp__tmux__list_workspaces`.
+- Temporary windows you create must be cleaned up (Ctrl+C, exit shell).
+
+## Common Pitfalls
+
+- Falling back to raw shell commands when an MCP tool exists.
+- Ignoring ESLint diagnostics emitted by the post-edit hook.
+- Running tests or type checkers outside the watcher workflow.
+- Not checking for existing tmux windows before creating new ones.
+
 ## Development Commands
 
 ### Linting and Type Checking
