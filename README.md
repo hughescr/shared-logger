@@ -47,21 +47,6 @@ console.log('captured');
 logger.restoreConsole();
 ```
 
-## Development
+## Contributing
 
-Run linting, type checking and tests with bun:
-
-```bash
-bun lint
-bun x tsc
-bun test
-```
-
-Run mutation testing with bun:
-
-```bash
-bun mutate
-```
-
-Mutation tests are expected to reach 100% coverage to ensure that
-the suite can detect unintended code changes.
+Interested in contributing? See [CONTRIBUTING.md](https://github.com/hughescr/shared-logger/blob/main/CONTRIBUTING.md) for development setup, testing guidelines, and our git-flow branching model.
