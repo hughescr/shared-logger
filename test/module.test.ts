@@ -150,13 +150,13 @@ describe('Logging', () => {
             logger.interceptConsole();
             logger.interceptConsole();
 
-            const spyOnInfo = spyOn(methodLogger, 'info').mockImplementation(_.noop);
+            const spyOnInfo = spyOn(methodLogger, 'info').mockImplementation((..._args: unknown[]) => _.noop());
             console.log('during');
             expect(spyOnInfo).toHaveBeenCalledWith('during', { source: 'console' });
 
             logger.restoreConsole();
             spyOnInfo.mockClear();
-            const origLogSpy = spyOn(consoleStreams, 'log').mockImplementation(_.noop);
+            const origLogSpy = spyOn(consoleStreams, 'log').mockImplementation((..._args: unknown[]) => _.noop());
             console.log('after');
             expect(spyOnInfo).not.toHaveBeenCalled();
             expect(origLogSpy).toHaveBeenCalledWith('after');

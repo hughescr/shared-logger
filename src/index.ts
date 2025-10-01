@@ -5,6 +5,16 @@ import winston from 'winston';
 import { DateTime } from 'luxon';
 import morgan from 'morgan';
 import type http from 'node:http';
+import type { InspectOptions } from 'node:util';
+
+interface ExpressRequest extends http.IncomingMessage {
+    route?: { path: string }
+    user?:  { _id: string }
+}
+
+interface ExpressResponse extends http.ServerResponse {
+    _header?: string
+}
 
 interface ExtendedLogger extends winston.Logger {
     restoreConsole:   () => void
@@ -39,14 +49,22 @@ const logger: ExtendedLogger = winston.createLogger({
                 winston.format.timestamp(),
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }: { timestamp?: string, level: string, message?: unknown, [key: string]: unknown }) => {
-                    if(message instanceof Object) {
-                        message = JSON.stringify(message); // eslint-disable-line no-param-reassign -- I have to over-ride message here
-                    }
-                    if(level === noprefix) {
-                        return _.trim(String(message));
+                    let formattedMessage: string;
+                    if(message !== undefined && message !== null && _.isObject(message)) {
+                        formattedMessage = JSON.stringify(message);
+                    } else if(message !== undefined && message !== null) {
+                        formattedMessage = _.isString(message) ? message : JSON.stringify(message);
+                    } else {
+                        formattedMessage = '';
                     }
 
-                    return `[${timestamp}] [${_.toUpper(level)}]${message ? ' ' + String(message) : ''}${meta && _.size(meta) ? ' ' + JSON.stringify(meta) : ''}`;
+                    if(level === noprefix) {
+                        return _.trim(formattedMessage);
+                    }
+
+                    const messageStr = formattedMessage ? ' ' + formattedMessage : '';
+                    const metaStr = meta && _.size(meta) ? ' ' + JSON.stringify(meta) : '';
+                    return `[${timestamp ?? ''}] [${_.toUpper(level)}]${messageStr}${metaStr}`;
                 })
             ),
         }),
@@ -54,18 +72,16 @@ const logger: ExtendedLogger = winston.createLogger({
 }) as unknown as ExtendedLogger;
 
 morgan.token('timestamp', LUXON_FORMAT_NOW);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- req from express
-morgan.token('route',     (req: any) => _.get(req, 'route.path', '***'));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- req from express
-morgan.token('user',      (req: any) => _.get(req, 'user._id')); // defaults to '-' even if you specify ''
+morgan.token('route',     (req: http.IncomingMessage) => _.get(req as ExpressRequest, 'route.path', '***'));
+morgan.token('user',      (req: http.IncomingMessage) => _.get(req as ExpressRequest, 'user._id')); // defaults to '-' even if you specify ''
 
 morgan.format('mydev', function myDevFormatLine(
     tokens: morgan.TokenIndexer<http.IncomingMessage, http.ServerResponse>,
     req: http.IncomingMessage,
     res: http.ServerResponse
 ): string {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing internal property
-    const status: number | undefined = (res as any)._header ? res.statusCode : undefined;
+    const expressRes = res as ExpressResponse;
+    const status: number | undefined = expressRes._header ? res.statusCode : undefined;
 
     // get status color
     let color: number;
@@ -77,47 +93,56 @@ morgan.format('mydev', function myDevFormatLine(
     }
 
     // Build up format string for Morgan
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic property storage
-    let fn: morgan.FormatFn<any, any> | undefined = (myDevFormatLine as any)[`colorFormatter${color}`]; // Cache the format lines so we don't have to keep recompiling
-    if(!fn) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic property storage
-        fn = (myDevFormatLine as any)[`colorFormatter${color}`] = morgan.compile(`[:timestamp] \x1b[90m:method :url :route \x1b[${color}m:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~`);
+    interface FormatLineWithCache {
+        (tokens: morgan.TokenIndexer<http.IncomingMessage, http.ServerResponse>, req: http.IncomingMessage, res: http.ServerResponse): string
+        [key: string]: morgan.FormatFn<http.IncomingMessage, http.ServerResponse> | undefined
     }
+    const cachedFormatter = myDevFormatLine as FormatLineWithCache;
+    let fn: morgan.FormatFn<http.IncomingMessage, http.ServerResponse> | undefined = cachedFormatter[`colorFormatter${color}`]; // Cache the format lines so we don't have to keep recompiling
+    fn ??= cachedFormatter[`colorFormatter${color}`] = morgan.compile(`[:timestamp] \x1b[90m:method :url :route \x1b[${color}m:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~`);
 
     return fn(tokens, req, res)!;
 });
 
 const replacement_console: Record<string, (...args: unknown[]) => void> = {};
+interface LogMetadata {
+    source?:       string
+    stacktrace?:   string
+    [key: string]: unknown
+}
+
 _.forEach(['log', 'info', 'warn', 'error'], (f) => {
     replacement_console[f] = function hideMe(...args: unknown[]) {
         const argsArray = Array.prototype.slice.call(args) as unknown[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- unknown object structure
-        let lastArg: any = _.last(argsArray);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- augmenting argument
-        if(lastArg && _.isObject(lastArg) && (lastArg as any).source === undefined) { // Set source to "console" if not already set to something else
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- augmenting argument
-            (lastArg as any).source = 'console';
+        const lastArg: unknown = _.last(argsArray);
+
+        if(lastArg && _.isObject(lastArg) && (lastArg as LogMetadata).source === undefined) { // Set source to "console" if not already set to something else
+            (lastArg as LogMetadata).source = 'console';
         } else if(!_.isObject(lastArg)) {
             argsArray.push({ source: 'console' });
         }
 
-        lastArg = _.last(argsArray);
+        const lastArgTyped = _.last(argsArray) as LogMetadata;
 
-        if(f == 'error' && !(lastArg).stacktrace) {
+        if(f == 'error' && !lastArgTyped.stacktrace) {
             const stackTrace = { name: 'Stacktrace' } as { name: string, stack?: string };
             Error.captureStackTrace(stackTrace, hideMe);
 
-            (lastArg).stacktrace = stackTrace.stack;
+            lastArgTyped.stacktrace = stackTrace.stack;
         }
 
         // Winston has no "log", just "info"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic call into logger
-        return (logger as any)[f == 'log' ? 'info' : f].apply(logger, argsArray);
+        interface LoggerWithMethods {
+            info(...args: unknown[]): void
+            warn(...args: unknown[]): void
+            error(...args: unknown[]): void
+        }
+        const methodName = f == 'log' ? 'info' : f as 'info' | 'warn' | 'error';
+        return (logger as unknown as LoggerWithMethods)[methodName].apply(logger, argsArray);
     };
 });
 replacement_console.dir = function(obj: unknown, options?: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inspect options are untyped
-    logger.info(inspect(obj, options as any), { source: 'console' });
+    logger.info(inspect(obj, options as InspectOptions), { source: 'console' });
 };
 
 logger.restoreConsole = function(): void {
@@ -129,8 +154,9 @@ logger.interceptConsole = function(): void {
 };
 
 logger.morganStream = new Writable({
-    write(chunk, encoding, callback) {
-        logger.log({ level: noprefix, message: chunk.toString('utf8') });
+    write(chunk, _encoding, callback) {
+        const message = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+        logger.log({ level: noprefix, message });
         callback();
     }
 });
