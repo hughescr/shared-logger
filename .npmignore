@@ -1,12 +1,31 @@
-logger.sublime-*
-.gitignore
-.eslintignore
-.eslintrc.js
-Gruntfile.js
-README.md
+# Development and testing
+test/
+coverage/
+.nyc_output/
+reports/
 
-test
-coverage
-.nyc_output
-reports
-stryker.conf.js
+# Configuration files
+*.config.mjs
+*.config.cjs
+*.config.js
+tsconfig*.json
+stryker.conf.mjs
+eslint.config.mjs
+jest.config.cjs
+
+# Git and GitHub
+.git*
+.github/
+
+# IDE and editor files
+*.sublime-*
+.claude/
+
+# Lock files
+bun.lock
+
+# Documentation (developer-facing)
+CONTRIBUTING.md
+CLAUDE.md
+AGENTS.md
+.mcp.json
