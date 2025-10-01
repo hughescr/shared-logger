@@ -1,8 +1,10 @@
+'use strict';
+
 module.exports = {
-    preset: 'ts-jest/presets/default-esm',
-    testEnvironment: 'node',
+    preset:                 'ts-jest/presets/default-esm',
+    testEnvironment:        'node',
     extensionsToTreatAsEsm: ['.ts'],
-    moduleNameMapper: {
+    moduleNameMapper:       {
         '^bun:test$': '<rootDir>/test/bun-test.ts'
     },
     transform: {

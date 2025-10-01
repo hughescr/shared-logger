@@ -7,9 +7,9 @@ import morgan from 'morgan';
 import type http from 'node:http';
 
 interface ExtendedLogger extends winston.Logger {
-    restoreConsole: () => void
+    restoreConsole:   () => void
     interceptConsole: () => void
-    morganStream: Writable
+    morganStream:     Writable
 }
 
 const orig_console: Record<string, (...args: unknown[]) => void> = {};
@@ -25,17 +25,17 @@ const noprefix = 'noprefix';
 
 const logger: ExtendedLogger = winston.createLogger({
     levels: {
-        error: 0,
-        warn: 1,
-        info: 2,
+        error:      0,
+        warn:       1,
+        info:       2,
         [noprefix]: 2,
-        debug: 3,
+        debug:      3,
     },
-    level: 'debug',
+    level:      'debug',
     transports: [
         new winston.transports.Console({
             stderrLevels: ['error', 'debug'],
-            format: winston.format.combine(
+            format:       winston.format.combine(
                 winston.format.timestamp(),
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }: { timestamp?: string, level: string, message?: unknown, [key: string]: unknown }) => {
@@ -84,7 +84,7 @@ morgan.format('mydev', function myDevFormatLine(
         fn = (myDevFormatLine as any)[`colorFormatter${color}`] = morgan.compile(`[:timestamp] \x1b[90m:method :url :route \x1b[${color}m:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~`);
     }
 
-    return fn(tokens, req, res) as string;
+    return fn(tokens, req, res)!;
 });
 
 const replacement_console: Record<string, (...args: unknown[]) => void> = {};
@@ -102,12 +102,12 @@ _.forEach(['log', 'info', 'warn', 'error'], (f) => {
         }
 
         lastArg = _.last(argsArray);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- attach stacktrace to argument
-        if(f == 'error' && !(lastArg as any).stacktrace) {
+
+        if(f == 'error' && !(lastArg).stacktrace) {
             const stackTrace = { name: 'Stacktrace' } as { name: string, stack?: string };
             Error.captureStackTrace(stackTrace, hideMe);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- attach stacktrace
-            (lastArg as any).stacktrace = stackTrace.stack;
+
+            (lastArg).stacktrace = stackTrace.stack;
         }
 
         // Winston has no "log", just "info"

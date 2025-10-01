@@ -23,7 +23,7 @@ interface ConsoleWithStreams extends Console {
 }
 
 interface ExpressRequestWithUser extends IncomingMessage {
-    user?: { _id: string }
+    user?:  { _id: string }
     route?: { path: string }
 }
 
@@ -337,16 +337,16 @@ describe('Logging', () => {
         it('express middleware should handle case of logging where there is no res._header', () => {
             expect.assertions(1);
             const req = {
-                method: 'GET',
-                url: '/some/path',
-                headers: { referrer: 'http://example.com/some/referrer' },
+                method:     'GET',
+                url:        '/some/path',
+                headers:    { referrer: 'http://example.com/some/referrer' },
                 connection: { remoteAddress: '127.0.0.1' },
-                _startAt: [0, 0],
+                _startAt:   [0, 0],
             } as unknown as IncomingMessage;
             const res = {
                 statusCode: 200,
-                _header: undefined,
-                _startAt: [0, 0],
+                _header:    undefined,
+                _startAt:   [0, 0],
             } as unknown as ServerResponse;
 
             const line = (morgan as unknown as Record<string, unknown>).mydev as (tokens: morgan.TokenIndexer<IncomingMessage, ServerResponse>, req: IncomingMessage, res: ServerResponse) => string;
