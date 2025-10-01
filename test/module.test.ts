@@ -90,12 +90,145 @@ describe('Logging', () => {
             expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hi \{"some":"object"\}\n$/));
         });
 
+        it('logging should handle multiple string arguments', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('hello', 'world');
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hello world\n$/));
+        });
+
+        it('logging should handle multiple strings followed by object', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('hello', 'world', { obj: 1 });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hello world \{"obj":1\}\n$/));
+        });
+
+        it('logging should handle object followed by object', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info({ obj: 1 }, { other: 2 });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] \{"obj":1\} \{"other":2\}\n$/));
+        });
+
+        it('logging should handle three strings', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('hello', 'world', 'test');
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hello world test\n$/));
+        });
+
+        it('logging should handle multiple non-object args after strings', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('hello', 123, 456);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hello \{"0":123,"1":456\}\n$/));
+        });
+
+        it('logging should handle string with multiple objects', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('hello', { a: 1 }, { b: 2 });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hello \{"a":1,"b":2\}\n$/));
+        });
+
+        it('logging should handle two objects without strings', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info({ a: 1 }, { b: 2 });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] \{"a":1\} \{"b":2\}\n$/));
+        });
+
+        it('logging should handle single non-object primitive', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info(123);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] 123\n$/));
+        });
+
+        it('logging should handle number followed by object', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info(123, { meta: 'data' });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] 123 \{"meta":"data"\}\n$/));
+        });
+
         it('logging should allow empty message', () => {
             expect.assertions(1);
             const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
             methodLogger.info();
 
-            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\]\n$/));
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[.*\] \[INFO\]\n$/));
+        });
+
+        it('logging with zero args should not have metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info();
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.not.stringMatching(/\{.*\}/));
+        });
+
+        it('logging with one arg should not have metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('single');
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.not.stringMatching(/single[^\n\r{\u2028\u2029]*\{.*\}/));
+        });
+
+        it('logging with two strings should not include metadata braces', () => {
+            expect.assertions(2);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('first', 'second');
+
+            const output = spyOnStream.mock.calls[spyOnStream.mock.calls.length - 1][0];
+            expect(output).toMatch(/\[INFO\] first second\n$/);
+            // Critical: no braces should appear (would fail if empty metadata {} is added)
+            expect(output).not.toContain('{');
+        });
+
+        it('logging with string and number should include metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info('msg', 123);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\{"0":123\}/));
+        });
+
+        it('logging with 0 args should produce exactly undefined message with no metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info();
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[.*\] \[INFO\]\n$/));
+        });
+
+        it('logging with 2+ args where first is not string should have metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            methodLogger.info(null, { meta: 'data' });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\{"meta":"data"\}/));
+        });
+
+        it('logging with single object should use that object directly as metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+            const metaObj = { direct: 'reference' };
+            methodLogger.info('message', metaObj);
+
+            // Verify the exact object content appears in output
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\{"direct":"reference"\}/));
         });
 
         it('logging should message with just object', () => {

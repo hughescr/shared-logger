@@ -33,7 +33,7 @@ function LUXON_FORMAT_NOW(): string {
 
 const noprefix = 'noprefix';
 
-const logger: ExtendedLogger = winston.createLogger({
+const baseLogger: ExtendedLogger = winston.createLogger({
     levels: {
         error:      0,
         warn:       1,
@@ -70,6 +70,49 @@ const logger: ExtendedLogger = winston.createLogger({
         }),
     ],
 }) as unknown as ExtendedLogger;
+
+// Wrap logger methods to handle multiple string arguments like console.log
+interface LoggerWithMethods {
+    info(...args: unknown[]): winston.Logger
+    warn(...args: unknown[]): winston.Logger
+    error(...args: unknown[]): winston.Logger
+    debug(...args: unknown[]): winston.Logger
+}
+
+function processLogArgs(args: unknown[]): { message: unknown, metadata?: Record<string, unknown> } {
+    // Collect consecutive leading strings
+    const stringArgs: string[] = [];
+    for(const arg of args) {
+        if(!_.isString(arg)) {
+            break;
+        }
+        stringArgs.push(arg);
+    }
+
+    // Build message: join strings if we have any, otherwise use first arg
+    const hasStrings = stringArgs.length > 0;
+    const message = hasStrings ? stringArgs.join(' ') : args[0];
+
+    // Get remaining args (everything after strings, or everything after first arg)
+    const remainingArgs = args.slice(hasStrings ? stringArgs.length : 1);
+
+    // Convert all remaining args to metadata objects, then merge
+    const metadataObjects = _.map(remainingArgs, (arg: unknown, idx: number): Record<string, unknown> =>
+        (_.isObject(arg) ? arg as Record<string, unknown> : { [idx]: arg })
+    );
+    const metadata = _.assign({}, ...metadataObjects) as Record<string, unknown>;
+
+    return { message, metadata };
+}
+
+const logger: ExtendedLogger = _.create(baseLogger) as ExtendedLogger;
+_.forEach(['info', 'warn', 'error', 'debug'], (method) => {
+    const originalMethod = baseLogger[method as keyof LoggerWithMethods].bind(baseLogger);
+    logger[method as keyof LoggerWithMethods] = function(...args: unknown[]): winston.Logger {
+        const { message, metadata } = processLogArgs(args);
+        return originalMethod(message as string, metadata);
+    };
+});
 
 morgan.token('timestamp', LUXON_FORMAT_NOW);
 morgan.token('route',     (req: http.IncomingMessage) => _.get(req as ExpressRequest, 'route.path', '***'));
