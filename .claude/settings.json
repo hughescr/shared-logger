@@ -1,27 +1,15 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(bun test:*)",
-      "WebSearch",
-      "WebFetch",
-      "mcp__DevTools",
-      "mcp__Tmux",
-      "mcp__Search"
-    ],
+    "allow": [],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|Update|mcp__DevTools__insert_after_symbol|mcp__DevTools__insert_before_symbol|mcp__DevTools__replace_symbol_body",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input?.filePath // .tool_input?.file_path // error(\"Missing filePath or file_path in tool_input\")' | xargs bunx eslint --cache --format=unix --fix --max-warnings=0 --no-warn-ignored 1>&2 || exit 2"
-          }
-        ]
-      }
-    ]
+  "enabledPlugins": {
+    "feature-dev@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }
