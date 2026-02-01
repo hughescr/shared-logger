@@ -129,9 +129,15 @@ morgan.format('mydev', function myDevFormatLine(
     // get status color
     let color: number;
     switch(true) {
-        case (status !== undefined && status >= 500): color = 31; break;  // red
-        case (status !== undefined && status >= 400): color = 33; break;  // yellow
-        case (status !== undefined && status >= 300): color = 36; break;  // cyan
+        case (status !== undefined && status >= 500):
+            color = 31;  // red
+            break;
+        case (status !== undefined && status >= 400):
+            color = 33;  // yellow
+            break;
+        case (status !== undefined && status >= 300):
+            color = 36;  // cyan
+            break;
         default: color = 32;                      // green
     }
 

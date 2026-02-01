@@ -44,3 +44,4 @@ reports/
 .claude/settings.local.json
 .eslintcache
 /.serena
+/.stryker-tmp

@@ -254,31 +254,47 @@ describe('Logging', () => {
         it('intercepting and restoring console should work', () => {
             expect.assertions(10);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).not.toBe(orig_console[f]);
+            });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
         });
 
         it('intercepting and restoring console multiple times should work', () => {
             expect.assertions(15);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
             logger.interceptConsole();
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).not.toBe(orig_console[f]);
+            });
 
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
         });
 
         it('intercepting twice then restoring once should reset console', () => {
             expect.assertions(8);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
 
             logger.interceptConsole();
             logger.interceptConsole();
