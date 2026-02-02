@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "description": "Logging module common to Craig's packages",
   "keywords": [
     "logging"
@@ -18,8 +18,7 @@
   "type": "module",
   "main": "src/index.ts",
   "files": [
-    "src/index.ts",
-    "LICENSE.md"
+    ".crh"
   ],
   "scripts": {
     "lint": "eslint --cache --format unix .",
