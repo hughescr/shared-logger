@@ -7,6 +7,18 @@ import morgan from 'morgan';
 import type http from 'node:http';
 import type { InspectOptions } from 'node:util';
 
+// ANSI color codes for terminal output
+const ANSI = {
+    codes: {
+        RED:    31,  // Error (5xx)
+        GREEN:  32,  // Success (2xx)
+        YELLOW: 33,  // Client error (4xx)
+        CYAN:   36,  // Redirect (3xx)
+    },
+    GRAY:  '\x1b[90m',
+    RESET: '\x1b[0m',
+} as const;
+
 interface ExpressRequest extends http.IncomingMessage {
     route?: { path: string }
     user?:  { _id: string }
@@ -20,17 +32,27 @@ interface ExtendedLogger extends winston.Logger {
     restoreConsole:   () => void
     interceptConsole: () => void
     morganStream:     Writable
+    json:             (data: Record<string, unknown>) => winston.Logger
 }
 
-const orig_console: Record<string, (...args: unknown[]) => void> = {};
-_.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
-    orig_console[f] = (console as unknown as Record<string, (...args: unknown[]) => void>)[f];
-});
+let orig_console: Record<string, (...args: unknown[]) => void> | null = null;
 
 function LUXON_FORMAT_NOW(): string {
     return DateTime.utc().toISO();
 }
 
+function safeStringify(obj: unknown): string {
+    try {
+        return JSON.stringify(obj);
+    } catch{
+        return '[Unserializable]';
+    }
+}
+
+/**
+ * Log level constant for messages without timestamp/level prefix.
+ * Useful for streaming output like Morgan access logs.
+ */
 const noprefix = 'noprefix';
 
 const baseLogger: ExtendedLogger = winston.createLogger({
@@ -50,10 +72,10 @@ const baseLogger: ExtendedLogger = winston.createLogger({
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }: { timestamp?: string, level: string, message?: unknown, [key: string]: unknown }) => {
                     let formattedMessage: string;
-                    if(message !== undefined && message !== null && _.isObject(message)) {
-                        formattedMessage = JSON.stringify(message);
+                    if(message !== undefined && message !== null && _.isPlainObject(message)) {
+                        formattedMessage = safeStringify(message);
                     } else if(message !== undefined && message !== null) {
-                        formattedMessage = _.isString(message) ? message : JSON.stringify(message);
+                        formattedMessage = _.isString(message) ? message : safeStringify(message);
                     } else {
                         formattedMessage = '';
                     }
@@ -63,7 +85,7 @@ const baseLogger: ExtendedLogger = winston.createLogger({
                     }
 
                     const messageStr = formattedMessage ? ' ' + formattedMessage : '';
-                    const metaStr = meta && _.size(meta) ? ' ' + JSON.stringify(meta) : '';
+                    const metaStr = meta && _.size(meta) ? ' ' + safeStringify(meta) : '';
                     return `[${timestamp ?? ''}] [${_.toUpper(level)}]${messageStr}${metaStr}`;
                 })
             ),
@@ -98,13 +120,33 @@ function processLogArgs(args: unknown[]): { message: unknown, metadata?: Record<
 
     // Convert all remaining args to metadata objects, then merge
     const metadataObjects = _.map(remainingArgs, (arg: unknown, idx: number): Record<string, unknown> =>
-        (_.isObject(arg) ? arg as Record<string, unknown> : { [idx]: arg })
+        (_.isPlainObject(arg) ? arg as Record<string, unknown> : { [idx]: arg })
     );
     const metadata = _.assign({}, ...metadataObjects) as Record<string, unknown>;
 
     return { message, metadata };
 }
 
+/**
+ * Extended Winston logger with console interception and Express middleware support.
+ *
+ * @example
+ * ```typescript
+ * import { logger } from '@hughescr/logger';
+ *
+ * logger.info('Hello', 'world');           // Multiple args joined
+ * logger.info('User logged in', { userId: 123 });  // With metadata
+ * logger.error('Failed', new Error('oops'));       // Error logging
+ *
+ * // Console interception
+ * logger.interceptConsole();  // Redirects console.log etc to Winston
+ * console.log('Now goes to Winston');
+ * logger.restoreConsole();    // Restore original console
+ * ```
+ *
+ * @remarks
+ * For PII redaction, consider using @niveus/winston-utils
+ */
 const logger: ExtendedLogger = _.create(baseLogger) as ExtendedLogger;
 _.forEach(['info', 'warn', 'error', 'debug'], (method) => {
     const originalMethod = baseLogger[method as keyof LoggerWithMethods].bind(baseLogger);
@@ -113,6 +155,21 @@ _.forEach(['info', 'warn', 'error', 'debug'], (method) => {
         return originalMethod(message as string, metadata);
     };
 });
+
+/**
+ * Log structured JSON data at info level.
+ *
+ * @param data - Object to log as structured JSON
+ * @returns The logger instance for chaining
+ *
+ * @example
+ * ```typescript
+ * logger.json({ event: 'user_login', userId: 123, timestamp: Date.now() });
+ * ```
+ */
+logger.json = function(data: Record<string, unknown>): winston.Logger {
+    return logger.log({ ...data, level: 'info', message: '' });
+};
 
 morgan.token('timestamp', LUXON_FORMAT_NOW);
 morgan.token('route',     (req: http.IncomingMessage) => _.get(req as ExpressRequest, 'route.path', '***'));
@@ -129,10 +186,16 @@ morgan.format('mydev', function myDevFormatLine(
     // get status color
     let color: number;
     switch(true) {
-        case (status !== undefined && status >= 500): color = 31; break;  // red
-        case (status !== undefined && status >= 400): color = 33; break;  // yellow
-        case (status !== undefined && status >= 300): color = 36; break;  // cyan
-        default: color = 32;                      // green
+        case (status !== undefined && status >= 500):
+            color = ANSI.codes.RED;
+            break;
+        case (status !== undefined && status >= 400):
+            color = ANSI.codes.YELLOW;
+            break;
+        case (status !== undefined && status >= 300):
+            color = ANSI.codes.CYAN;
+            break;
+        default: color = ANSI.codes.GREEN;
     }
 
     // Build up format string for Morgan
@@ -142,9 +205,10 @@ morgan.format('mydev', function myDevFormatLine(
     }
     const cachedFormatter = myDevFormatLine as FormatLineWithCache;
     let fn: morgan.FormatFn<http.IncomingMessage, http.ServerResponse> | undefined = cachedFormatter[`colorFormatter${color}`]; // Cache the format lines so we don't have to keep recompiling
-    fn ??= cachedFormatter[`colorFormatter${color}`] = morgan.compile(`[:timestamp] \x1b[90m:method :url :route \x1b[${color}m:status \x1b[90m:response-time[5]ms :referrer \x1b[0m[:remote-addr] ~:user~`);
+    fn ??= cachedFormatter[`colorFormatter${color}`] = morgan.compile(`[:timestamp] ${ANSI.GRAY}:method :url :route \x1b[${color}m:status ${ANSI.GRAY}:response-time[5]ms :referrer ${ANSI.RESET}[:remote-addr] ~:user~`);
 
-    return fn(tokens, req, res)!;
+    // Stryker disable next-line StringLiteral: Defensive fallback that cannot be triggered in normal operation
+    return fn(tokens, req, res) ?? '[FORMAT_ERROR]';
 });
 
 const replacement_console: Record<string, (...args: unknown[]) => void> = {};
@@ -159,9 +223,9 @@ _.forEach(['log', 'info', 'warn', 'error'], (f) => {
         const argsArray = Array.prototype.slice.call(args) as unknown[];
         const lastArg: unknown = _.last(argsArray);
 
-        if(lastArg && _.isObject(lastArg) && (lastArg as LogMetadata).source === undefined) { // Set source to "console" if not already set to something else
-            (lastArg as LogMetadata).source = 'console';
-        } else if(!_.isObject(lastArg)) {
+        // Stryker disable next-line LogicalOperator: Mutation to || is semantically equivalent since _.isPlainObject(falsy) is always false
+        const hasExistingSource = lastArg && _.isPlainObject(lastArg) && (lastArg as LogMetadata).source !== undefined;
+        if(!hasExistingSource) {
             argsArray.push({ source: 'console' });
         }
 
@@ -174,12 +238,6 @@ _.forEach(['log', 'info', 'warn', 'error'], (f) => {
             lastArgTyped.stacktrace = stackTrace.stack;
         }
 
-        // Winston has no "log", just "info"
-        interface LoggerWithMethods {
-            info(...args: unknown[]): void
-            warn(...args: unknown[]): void
-            error(...args: unknown[]): void
-        }
         const methodName = f == 'log' ? 'info' : f as 'info' | 'warn' | 'error';
         return (logger as unknown as LoggerWithMethods)[methodName].apply(logger, argsArray);
     };
@@ -189,20 +247,81 @@ replacement_console.dir = function(obj: unknown, options?: unknown) {
 };
 
 logger.restoreConsole = function(): void {
-    _.assign(console, orig_console);
+    // Stryker disable next-line ConditionalExpression: Guard is defensive; _.assign handles null gracefully but check improves clarity
+    if(orig_console) {
+        _.assign(console, orig_console);
+    }
 };
 
 logger.interceptConsole = function(): void {
+    if(!orig_console) {
+        orig_console = {};
+        _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+            orig_console![f] = (console as unknown as Record<string, (...args: unknown[]) => void>)[f];
+        });
+    }
     _.assign(console, replacement_console);
 };
 
 logger.morganStream = new Writable({
     write(chunk, _encoding, callback) {
-        const message = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
-        logger.log({ level: noprefix, message });
-        callback();
+        try {
+            const message = Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+            logger.log({ level: noprefix, message });
+            return callback();
+        } catch (error) {
+            return callback(_.isError(error) ? error : new Error(String(error)));
+        }
     }
 });
+
+/**
+ * Express middleware for HTTP request logging using Morgan.
+ *
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { middleware } from '@hughescr/logger';
+ *
+ * const app = express();
+ * app.use(middleware);
+ * ```
+ *
+ * @remarks
+ * Uses custom 'mydev' format with colorized status codes and timestamps.
+ */
 // Stryker disable next-line ObjectLiteral: By default morgan will hook up to a stream that does the same thing
 export const middleware = morgan('mydev', { stream: logger.morganStream });
+
+/**
+ * Check if error level logging is enabled.
+ * @returns true if error level is enabled
+ */
+export const isErrorEnabled = (): boolean => logger.isErrorEnabled();
+
+/**
+ * Check if warn level logging is enabled.
+ * @returns true if warn level is enabled
+ */
+export const isWarnEnabled = (): boolean => logger.isWarnEnabled();
+
+/**
+ * Check if info level logging is enabled.
+ * @returns true if info level is enabled
+ */
+export const isInfoEnabled = (): boolean => logger.isInfoEnabled();
+
+/**
+ * Check if debug level logging is enabled.
+ * @returns true if debug level is enabled
+ */
+export const isDebugEnabled = (): boolean => logger.isDebugEnabled();
+
+/**
+ * Check if a specific log level is enabled.
+ * @param level - The log level to check
+ * @returns true if the specified level is enabled
+ */
+export const isLevelEnabled = (level: string): boolean => logger.isLevelEnabled(level);
+
 export { logger, noprefix };

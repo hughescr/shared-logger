@@ -42,3 +42,6 @@ reports/
 
 # Claude local config file
 .claude/settings.local.json
+.eslintcache
+/.serena
+/.stryker-tmp

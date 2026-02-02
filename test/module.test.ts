@@ -254,31 +254,47 @@ describe('Logging', () => {
         it('intercepting and restoring console should work', () => {
             expect.assertions(10);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).not.toBe(orig_console[f]);
+            });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
         });
 
         it('intercepting and restoring console multiple times should work', () => {
             expect.assertions(15);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
             logger.interceptConsole();
             logger.interceptConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).not.toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).not.toBe(orig_console[f]);
+            });
 
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
             logger.restoreConsole();
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { expect(consoleStreams[f]).toBe(orig_console[f]); });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                expect(consoleStreams[f]).toBe(orig_console[f]);
+            });
         });
 
         it('intercepting twice then restoring once should reset console', () => {
             expect.assertions(8);
             const orig_console: Record<string, (...args: unknown[]) => void> = {};
-            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => { orig_console[f] = consoleStreams[f]; });
+            _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
+                orig_console[f] = consoleStreams[f];
+            });
 
             logger.interceptConsole();
             logger.interceptConsole();
@@ -393,6 +409,35 @@ describe('Logging', () => {
             logger.restoreConsole();
 
             expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] hi \{"some":"object","source":"console"\}\n$/));
+        });
+
+        it('console interception should add source when last arg is non-plain-object', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            logger.interceptConsole();
+            // Pass an array (truthy but not a plain object)
+            // With &&: evaluates _.isPlainObject([1,2]) = false, so hasExistingSource = false, source added
+            // With ||: short-circuits to true (array is truthy), so hasExistingSource = true, source NOT added (WRONG!)
+            console.log('test', [1, 2]);
+            logger.restoreConsole();
+
+            // Should have source: console added (not treated as existing source)
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] test \{"0":\[1,2\],"source":"console"\}\n$/));
+        });
+
+        it('restoreConsole called before interceptConsole should be safe no-op', () => {
+            expect.assertions(1);
+
+            // Get a fresh module state by checking console functions exist
+            const originalLog = console.log;
+
+            // Call restoreConsole when never intercepted - should be no-op
+            // If the guard is removed, _.assign(console, null) would throw or corrupt console
+            logger.restoreConsole();
+
+            // Console methods should be unchanged
+            expect(console.log).toBe(originalLog);
         });
     });
 
@@ -512,6 +557,203 @@ describe('Logging', () => {
                     expect(mydevColor).toHaveProperty(`colorFormatter${status_color[1]}`, expect.any(Function));
                 });
             });
+        });
+    });
+
+    describe('Edge cases', () => {
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it('should handle circular references without throwing', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            const circular: Record<string, unknown> = { name: 'test' };
+            circular.self = circular;
+
+            // Should not throw
+            methodLogger.info('circular test', circular);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] circular test \[Unserializable\]/));
+        });
+
+        it('should handle BigInt values without throwing', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            const data = { big: BigInt(9007199254740991) };
+
+            // Should not throw
+            methodLogger.info('bigint test', data);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] bigint test \[Unserializable\]/));
+        });
+
+        it('should handle frozen objects in console interception', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            logger.interceptConsole();
+            const frozen = Object.freeze({ immutable: 'data' });
+
+            // Should not throw - we no longer mutate user objects
+            console.log('frozen test', frozen);
+            logger.restoreConsole();
+
+            // The frozen object should be logged, and source: console added separately
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] frozen test/));
+        });
+
+        it('should handle array metadata correctly (not spread into numbered keys)', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            methodLogger.info('array test', [1, 2, 3]);
+
+            // Arrays should become { "0": [1,2,3] }, not spread into { "0": 1, "1": 2, "2": 3 }
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] array test \{"0":\[1,2,3\]\}/));
+        });
+
+        it('should handle unicode and special characters', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            methodLogger.info('unicode: 你好 🎉 émojis');
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] unicode: 你好 🎉 émojis/));
+        });
+
+        it('should handle very large objects', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            const largeObj: Record<string, number> = {};
+            for(let i = 0; i < 1000; i++) {
+                largeObj[`key${i}`] = i;
+            }
+
+            // Should not throw or hang
+            methodLogger.info('large object', largeObj);
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] large object \{.*"key999":999.*\}/));
+        });
+
+        it('should handle null and undefined in metadata', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            methodLogger.info('nullish test', { nullVal: null, undefVal: undefined });
+
+            // undefined values are typically omitted by JSON.stringify, null is preserved
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] nullish test \{"nullVal":null\}/));
+        });
+
+        it('logger.json() should log structured data', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            logger.json({ event: 'test_event', value: 42 });
+
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\].*"event":"test_event".*"value":42/));
+        });
+
+        it('logger.json() should output without message prefix', () => {
+            expect.assertions(1);
+            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+
+            logger.json({ event: 'test' });
+
+            // The format should be: [timestamp] [INFO] {"event":"test"} - no message text between [INFO] and the JSON
+            // NOT: [timestamp] [INFO] some_message {"event":"test"}
+            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/\[INFO\] \{"event":"test"\}\n$/));
+        });
+
+        it('type guard exports should work correctly', () => {
+            expect.assertions(5);
+
+            // Import the type guards - they should be functions
+            expect(loggers).toHaveProperty('isErrorEnabled', expect.any(Function));
+            expect(loggers).toHaveProperty('isWarnEnabled', expect.any(Function));
+            expect(loggers).toHaveProperty('isInfoEnabled', expect.any(Function));
+            expect(loggers).toHaveProperty('isDebugEnabled', expect.any(Function));
+            expect(loggers).toHaveProperty('isLevelEnabled', expect.any(Function));
+        });
+
+        it('type guards should return correct values', () => {
+            expect.assertions(5);
+
+            // With default level 'debug', all levels should be enabled
+            expect((loggers as unknown as Record<string, () => boolean>).isErrorEnabled()).toBe(true);
+            expect((loggers as unknown as Record<string, () => boolean>).isWarnEnabled()).toBe(true);
+            expect((loggers as unknown as Record<string, () => boolean>).isInfoEnabled()).toBe(true);
+            expect((loggers as unknown as Record<string, () => boolean>).isDebugEnabled()).toBe(true);
+            expect((loggers as unknown as Record<string, (level: string) => boolean>).isLevelEnabled('info')).toBe(true);
+        });
+
+        it('morganStream should pass errors to callback when logger.log throws', () => {
+            expect.assertions(2);
+
+            // Save original logger.log
+            const originalLog = logger.log.bind(logger);
+
+            // Mock logger.log to throw
+            (logger as unknown as Record<string, unknown>).log = function() {
+                throw new Error('Test error from logger.log');
+            };
+
+            // Spy on the callback to capture the error passed to it
+            let capturedError: Error | null | undefined;
+            const mockCallback = (err?: Error | null) => {
+                capturedError = err;
+            };
+
+            // Get the write implementation from morganStream
+            // eslint-disable-next-line @typescript-eslint/unbound-method -- Need to access internal write method
+            const writeImpl = logger.morganStream._write;
+
+            // Call write directly with our mock callback
+            writeImpl.call(logger.morganStream, Buffer.from('test message'), 'utf8', mockCallback);
+
+            // Restore logger.log before assertions
+            (logger as unknown as Record<string, unknown>).log = originalLog;
+
+            // Verify the callback received the error
+            expect(capturedError).toBeInstanceOf(Error);
+            expect(capturedError!.message).toBe('Test error from logger.log');
+        });
+
+        it('morganStream should wrap non-Error throws in Error', () => {
+            expect.assertions(2);
+
+            // Save original logger.log
+            const originalLog = logger.log.bind(logger);
+
+            // Mock logger.log to throw a string (non-Error)
+            (logger as unknown as Record<string, unknown>).log = function() {
+                // eslint-disable-next-line @typescript-eslint/only-throw-error -- Intentionally testing non-Error throw handling
+                throw 'string error';
+            };
+
+            // Spy on the callback to capture the error passed to it
+            let capturedError: Error | null | undefined;
+            const mockCallback = (err?: Error | null) => {
+                capturedError = err;
+            };
+
+            // Get the write implementation from morganStream
+            // eslint-disable-next-line @typescript-eslint/unbound-method -- Need to access internal write method
+            const writeImpl = logger.morganStream._write;
+
+            // Call write directly with our mock callback
+            writeImpl.call(logger.morganStream, Buffer.from('test message'), 'utf8', mockCallback);
+
+            // Restore logger.log before assertions
+            (logger as unknown as Record<string, unknown>).log = originalLog;
+
+            // Verify the callback received the wrapped error
+            expect(capturedError).toBeInstanceOf(Error);
+            expect(capturedError!.message).toBe('string error');
         });
     });
 });

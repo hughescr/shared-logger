@@ -1,20 +1,19 @@
-// @ts-check
+const isCI = Boolean(process.env.GITHUB_SHA);
+
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
-const config = {
-    checkers:          ['typescript'],
-    typescriptChecker: {
-        prioritizePerformanceOverAccuracy: true,
-    },
-    packageManager: 'yarn',
-    reporters:      ['html', 'clear-text', 'progress', 'dashboard'],
-    testRunner:     'jest',
-    jest:           {
-        enableFindRelatedTests: true,
-    },
+export default {
+    checkers:         ['typescript'],
+    packageManager:   'npm',
+    incremental:      !isCI, // Fast incremental runs locally, full runs in CI
+    reporters:        isCI ? ['clear-text', 'progress', 'dashboard'] : ['progress', 'json', 'html'],
+    testRunner:       'bun',
+    bun:              { inspectorTimeout: isCI ? 30000 : 5000 },
+    plugins:          ['@hughescr/stryker-bun-runner', '@stryker-mutator/typescript-checker'],
     coverageAnalysis: 'perTest',
+    disableBail:      true, // Do not stop with first failing test, so we can get complete map of mutant:killer-tests
     mutate:           ['src/*.ts'],
-    thresholds:       { high: 100, low: 75, 'break': null },
-    cleanTempDir:     'always',
-    ignoreStatic:     true,
+    thresholds:       { high: 100, low: 100, 'break': 100 },
+    concurrency:      isCI ? 4 : 24,
+    tempDirName:      '.stryker-tmp',
+    warnings:         { slow: false },
 };
-export default config;
