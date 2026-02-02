@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.7.2",
+  "version": "2.8.0",
   "description": "Logging module common to Craig's packages",
   "keywords": [
     "logging"
