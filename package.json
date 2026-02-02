@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Logging module common to Craig's packages",
   "keywords": [
     "logging"
@@ -13,10 +13,14 @@
     "type": "git",
     "url": "git://github.com/hughescr/shared-logger.git"
   },
-  "license": "BSD-3-Clause",
+  "license": "Apache-2.0",
   "author": "Craig Hughes <craig.npm@rungie.com> (https://npmjs.org/~hughescr)",
   "type": "module",
   "main": "src/index.ts",
+  "files": [
+    "src/index.ts",
+    "LICENSE.md"
+  ],
   "scripts": {
     "lint": "eslint --cache --format unix .",
     "lint:fix": "eslint --cache --fix --format overview .",

@@ -1,4 +1,4 @@
-[![Maintainability](https://api.codeclimate.com/v1/badges/52b72f2f616b288326dc/maintainability)](https://codeclimate.com/github/hughescr/shared-logger/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/52b72f2f616b288326dc/test_coverage)](https://codeclimate.com/github/hughescr/shared-logger/test_coverage)
+[![Mutation testing badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fhughescr%2Fshared-logger%2Fdevelop)](https://dashboard.stryker-mutator.io/reports/github.com/hughescr/shared-logger/develop)
 
 Shared logger infrastructure
 ----------------------------
@@ -50,3 +50,7 @@ logger.restoreConsole();
 ## Contributing
 
 Interested in contributing? See [CONTRIBUTING.md](https://github.com/hughescr/shared-logger/blob/main/CONTRIBUTING.md) for development setup, testing guidelines, and our git-flow branching model.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see [LICENSE.md](LICENSE.md) for details.
