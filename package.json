@@ -17,10 +17,7 @@
   "author": "Craig Hughes <craig.npm@rungie.com> (https://npmjs.org/~hughescr)",
   "type": "module",
   "main": "src/index.ts",
-  "files": [
-    "src/index.ts",
-    "LICENSE.md"
-  ],
+  "files": [".crh"],
   "scripts": {
     "lint": "eslint --cache --format unix .",
     "lint:fix": "eslint --cache --fix --format overview .",
