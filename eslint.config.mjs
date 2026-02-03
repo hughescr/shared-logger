@@ -17,9 +17,10 @@ export default [
     },
     {
         rules: {
-            'no-console':              'off',
-            'n/no-missing-import':     'off',
-            'n/no-unpublished-import': 'off'
+            'no-console':                      'off',
+            'n/no-missing-import':             'off',
+            'n/no-unpublished-import':         'off',
+            'package-json/no-redundant-files': 'off',
         }
     }
 ];
