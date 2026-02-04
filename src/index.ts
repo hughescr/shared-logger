@@ -7,16 +7,19 @@ import morgan from 'morgan';
 import type http from 'node:http';
 import type { InspectOptions } from 'node:util';
 
-// ANSI color codes for terminal output
+// Helper to build ANSI escape sequence from color codes
+const ansiEscape = (code: number): string => `\x1b[${code}m`;
+
+// ANSI color codes derived from Node.js built-in util.inspect.colors
 const ANSI = {
     codes: {
-        RED:    31,  // Error (5xx)
-        GREEN:  32,  // Success (2xx)
-        YELLOW: 33,  // Client error (4xx)
-        CYAN:   36,  // Redirect (3xx)
+        RED:    inspect.colors.red[0],      // Error (5xx)
+        GREEN:  inspect.colors.green[0],    // Success (2xx)
+        YELLOW: inspect.colors.yellow[0],   // Client error (4xx)
+        CYAN:   inspect.colors.cyan[0],     // Redirect (3xx)
     },
-    GRAY:  '\x1b[90m',
-    RESET: '\x1b[0m',
+    GRAY:  ansiEscape(inspect.colors.gray[0]),
+    RESET: ansiEscape(inspect.colors.reset[0]),
 } as const;
 
 interface ExpressRequest extends http.IncomingMessage {

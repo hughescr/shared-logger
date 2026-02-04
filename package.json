@@ -1,6 +1,6 @@
 {
   "name": "@hughescr/logger",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "description": "Logging module common to Craig's packages",
   "keywords": [
     "logging"
@@ -32,7 +32,6 @@
     "postversion": "git commit -m \"Bump package version to $npm_package_version\" package.json; git flow release start $npm_package_version; git flow release finish -m $npm_package_version $npm_package_version; git checkout develop; git merge main"
   },
   "dependencies": {
-    "ansi-styles": "6.2.3",
     "lodash": "^4.17.23",
     "luxon": "^3.7.2",
     "morgan": "^1.10.1",
