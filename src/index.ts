@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { inspect } from 'node:util';
 import { Writable } from 'node:stream';
 import winston from 'winston';
-import { DateTime } from 'luxon';
+import { DateTime, IANAZone } from 'luxon';
 import morgan from 'morgan';
 import type http from 'node:http';
 import type { InspectOptions } from 'node:util';
@@ -37,8 +37,42 @@ interface ExtendedLogger extends winston.Logger {
 
 let orig_console: Record<string, (...args: unknown[]) => void> | null = null;
 
+/**
+ * Current timezone for log timestamps. Defaults to 'UTC'.
+ * @internal
+ */
+let currentTimezone = 'UTC';
+
+/**
+ * Get the current timezone used for log timestamps.
+ * @returns The current IANA timezone identifier (e.g., 'UTC', 'America/Los_Angeles')
+ */
+export function getTimezone(): string {
+    return currentTimezone;
+}
+
+/**
+ * Set the timezone used for log timestamps.
+ * @param tz - An IANA timezone identifier (e.g., 'America/New_York', 'Europe/London')
+ * @throws {Error} If the provided timezone is not a valid IANA timezone identifier
+ */
+export function setTimezone(tz: string): void {
+    if(!IANAZone.isValidZone(tz)) {
+        throw new Error(`Invalid timezone: '${tz}'. Must be a valid IANA timezone identifier.`);
+    }
+    currentTimezone = tz;
+}
+
+/**
+ * Reset the timezone to the default UTC.
+ */
+export function resetTimezone(): void {
+    currentTimezone = 'UTC';
+}
+
 function LUXON_FORMAT_NOW(): string {
-    return DateTime.utc().toISO();
+    // toISO() only returns null for invalid DateTime, but DateTime.now() is always valid and we validate timezone
+    return DateTime.now().setZone(currentTimezone).toISO()!;
 }
 
 function safeStringify(obj: unknown): string {
@@ -68,7 +102,7 @@ const baseLogger: ExtendedLogger = winston.createLogger({
         new winston.transports.Console({
             stderrLevels: ['error', 'debug'],
             format:       winston.format.combine(
-                winston.format.timestamp(),
+                winston.format.timestamp({ format: LUXON_FORMAT_NOW }),
                 winston.format.splat(),
                 winston.format.printf(({ timestamp, level, message, ...meta }: { timestamp?: string, level: string, message?: unknown, [key: string]: unknown }) => {
                     let formattedMessage: string;
