@@ -758,80 +758,87 @@ describe('Logging', () => {
     });
 
     describe('Timezone configuration', () => {
-        afterEach(() => {
-            jest.restoreAllMocks();
-            loggers.resetTimezone();
+        // Tests that verify initial module state - no afterEach cleanup here
+        // to ensure we're testing the actual initial value, not a reset value
+        describe('Initial state', () => {
+            it('should export timezone functions', () => {
+                expect.assertions(3);
+                expect(loggers).toHaveProperty('getTimezone', expect.any(Function));
+                expect(loggers).toHaveProperty('setTimezone', expect.any(Function));
+                expect(loggers).toHaveProperty('resetTimezone', expect.any(Function));
+            });
+
+            it('default timezone should be UTC', () => {
+                expect.assertions(1);
+                expect(loggers.getTimezone()).toBe('UTC');
+            });
         });
 
-        it('should export timezone functions', () => {
-            expect.assertions(3);
-            expect(loggers).toHaveProperty('getTimezone', expect.any(Function));
-            expect(loggers).toHaveProperty('setTimezone', expect.any(Function));
-            expect(loggers).toHaveProperty('resetTimezone', expect.any(Function));
-        });
+        // Tests that modify timezone state - afterEach ensures cleanup
+        describe('Timezone operations', () => {
+            afterEach(() => {
+                jest.restoreAllMocks();
+                loggers.resetTimezone();
+            });
 
-        it('default timezone should be UTC', () => {
-            expect.assertions(1);
-            expect(loggers.getTimezone()).toBe('UTC');
-        });
+            it('setTimezone should update the current timezone', () => {
+                expect.assertions(2);
+                loggers.setTimezone('America/New_York');
+                expect(loggers.getTimezone()).toBe('America/New_York');
 
-        it('setTimezone should update the current timezone', () => {
-            expect.assertions(2);
-            loggers.setTimezone('America/New_York');
-            expect(loggers.getTimezone()).toBe('America/New_York');
+                loggers.setTimezone('Europe/London');
+                expect(loggers.getTimezone()).toBe('Europe/London');
+            });
 
-            loggers.setTimezone('Europe/London');
-            expect(loggers.getTimezone()).toBe('Europe/London');
-        });
+            it('setTimezone should throw for invalid timezone', () => {
+                expect.assertions(2);
+                expect(() => loggers.setTimezone('Invalid/Timezone')).toThrow('Invalid timezone');
+                expect(() => loggers.setTimezone('NotATimezone')).toThrow('Must be a valid IANA timezone identifier');
+            });
 
-        it('setTimezone should throw for invalid timezone', () => {
-            expect.assertions(2);
-            expect(() => loggers.setTimezone('Invalid/Timezone')).toThrow('Invalid timezone');
-            expect(() => loggers.setTimezone('NotATimezone')).toThrow('Must be a valid IANA timezone identifier');
-        });
+            it('resetTimezone should restore UTC', () => {
+                expect.assertions(2);
+                loggers.setTimezone('Asia/Tokyo');
+                expect(loggers.getTimezone()).toBe('Asia/Tokyo');
 
-        it('resetTimezone should restore UTC', () => {
-            expect.assertions(2);
-            loggers.setTimezone('Asia/Tokyo');
-            expect(loggers.getTimezone()).toBe('Asia/Tokyo');
+                loggers.resetTimezone();
+                expect(loggers.getTimezone()).toBe('UTC');
+            });
 
-            loggers.resetTimezone();
-            expect(loggers.getTimezone()).toBe('UTC');
-        });
+            it('UTC timestamps should end with Z', () => {
+                expect.assertions(1);
+                const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
 
-        it('UTC timestamps should end with Z', () => {
-            expect.assertions(1);
-            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+                loggers.resetTimezone();
+                methodLogger.info('UTC test');
 
-            loggers.resetTimezone();
-            methodLogger.info('UTC test');
+                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/));
+            });
 
-            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/));
-        });
+            it('non-UTC timestamps should have offset notation', () => {
+                expect.assertions(1);
+                const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
 
-        it('non-UTC timestamps should have offset notation', () => {
-            expect.assertions(1);
-            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+                loggers.setTimezone('America/New_York');
+                methodLogger.info('Eastern test');
 
-            loggers.setTimezone('America/New_York');
-            methodLogger.info('Eastern test');
+                // Non-UTC timezones produce offset notation like +05:00 or -05:00
+                expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}\]/));
+            });
 
-            // Non-UTC timezones produce offset notation like +05:00 or -05:00
-            expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}\]/));
-        });
+            it('morgan middleware should respect timezone setting', async () => {
+                expect.assertions(1);
+                const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
 
-        it('morgan middleware should respect timezone setting', async () => {
-            expect.assertions(1);
-            const spyOnStream = spyOn(consoleStreams._stdout, 'write').mockImplementation(_.constant(true));
+                loggers.setTimezone('America/Los_Angeles');
 
-            loggers.setTimezone('America/Los_Angeles');
-
-            return request(http.createServer(okResponse))
-                .get('/timezone/test')
-                .expect(() => {
-                    // Morgan also uses LUXON_FORMAT_NOW via the timestamp token, so should show offset
-                    expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}\]/));
-                });
+                return request(http.createServer(okResponse))
+                    .get('/timezone/test')
+                    .expect(() => {
+                        // Morgan also uses LUXON_FORMAT_NOW via the timestamp token, so should show offset
+                        expect(spyOnStream).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}\]/));
+                    });
+            });
         });
     });
 });
