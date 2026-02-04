@@ -31,7 +31,26 @@ interface ExpressResponse extends http.ServerResponse {
     _header?: string
 }
 
-interface ExtendedLogger extends winston.Logger {
+/**
+ * Flexible log method that accepts multiple argument patterns:
+ * - Multiple strings: joined with spaces to form the message
+ * - Single object: logged directly as the message
+ * - String(s) + metadata: strings joined as message, remaining args as metadata
+ */
+interface FlexibleLogMethod {
+    (...messages: string[]): winston.Logger
+    (message: string, meta: Record<string, unknown>): winston.Logger
+    (obj: Record<string, unknown>): winston.Logger
+    (...args: unknown[]): winston.Logger
+}
+
+type OverriddenLogMethods = 'info' | 'warn' | 'error' | 'debug';
+
+interface Logger extends Omit<winston.Logger, OverriddenLogMethods> {
+    info:             FlexibleLogMethod
+    warn:             FlexibleLogMethod
+    error:            FlexibleLogMethod
+    debug:            FlexibleLogMethod
     restoreConsole:   () => void
     interceptConsole: () => void
     morganStream:     Writable
@@ -92,7 +111,7 @@ function safeStringify(obj: unknown): string {
  */
 const noprefix = 'noprefix';
 
-const baseLogger: ExtendedLogger = winston.createLogger({
+const baseLogger: Logger = winston.createLogger({
     levels: {
         error:      0,
         warn:       1,
@@ -128,15 +147,7 @@ const baseLogger: ExtendedLogger = winston.createLogger({
             ),
         }),
     ],
-}) as unknown as ExtendedLogger;
-
-// Wrap logger methods to handle multiple string arguments like console.log
-interface LoggerWithMethods {
-    info(...args: unknown[]): winston.Logger
-    warn(...args: unknown[]): winston.Logger
-    error(...args: unknown[]): winston.Logger
-    debug(...args: unknown[]): winston.Logger
-}
+}) as unknown as Logger;
 
 function processLogArgs(args: unknown[]): { message: unknown, metadata?: Record<string, unknown> } {
     // Collect consecutive leading strings
@@ -184,13 +195,13 @@ function processLogArgs(args: unknown[]): { message: unknown, metadata?: Record<
  * @remarks
  * For PII redaction, consider using @niveus/winston-utils
  */
-const logger: ExtendedLogger = _.create(baseLogger) as ExtendedLogger;
-_.forEach(['info', 'warn', 'error', 'debug'], (method) => {
-    const originalMethod = baseLogger[method as keyof LoggerWithMethods].bind(baseLogger);
-    logger[method as keyof LoggerWithMethods] = function(...args: unknown[]): winston.Logger {
+const logger: Logger = _.create(baseLogger) as Logger;
+_.forEach(['info', 'warn', 'error', 'debug'] as const, (method) => {
+    const originalMethod = baseLogger[method].bind(baseLogger);
+    logger[method] = function(...args: unknown[]): winston.Logger {
         const { message, metadata } = processLogArgs(args);
-        return originalMethod(message as string, metadata);
-    };
+        return originalMethod(message, metadata);
+    } as FlexibleLogMethod;
 });
 
 /**
@@ -276,7 +287,7 @@ _.forEach(['log', 'info', 'warn', 'error'], (f) => {
         }
 
         const methodName = f == 'log' ? 'info' : f as 'info' | 'warn' | 'error';
-        return (logger as unknown as LoggerWithMethods)[methodName].apply(logger, argsArray);
+        return logger[methodName](...argsArray);
     };
 });
 replacement_console.dir = function(obj: unknown, options?: unknown) {
@@ -362,3 +373,4 @@ export const isDebugEnabled = (): boolean => logger.isDebugEnabled();
 export const isLevelEnabled = (level: string): boolean => logger.isLevelEnabled(level);
 
 export { logger, noprefix };
+export type { Logger, FlexibleLogMethod };
