@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        // TODO(follow-up): enable "noUncheckedIndexedAccess" — src/index.ts already complies; test/module.test.ts has ~11 indexed-read errors to fix first
         "lib": [
             "ESNext"
         ],

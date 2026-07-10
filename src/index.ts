@@ -305,7 +305,8 @@ logger.interceptConsole = function(): void {
     if(!orig_console) {
         orig_console = {};
         _.forEach(['log', 'info', 'warn', 'error', 'dir'], (f) => {
-            orig_console![f] = (console as unknown as Record<string, (...args: unknown[]) => void>)[f];
+            // reason: f is always one of the five string literals above; Record lookup is guaranteed non-undefined
+            orig_console![f] = (console as unknown as Record<string, (...args: unknown[]) => void>)[f]!;
         });
     }
     _.assign(console, replacement_console);
